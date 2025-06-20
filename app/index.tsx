@@ -8,7 +8,7 @@ export default function WelcomeScreen() {
     <View style={{ flex:1, justifyContent:'center', alignItems:'center' }}>
       <Text>Welcome to our Auto Mobile service. We need a logo now</Text>
       {/* Link to login page */}
-      <Link href="/login" style={{ marginTop: 20, fontSize: 18, color: 'blue' }}>
+      <Link href="/LoginChoice" style={{ marginTop: 20, fontSize: 18, color: 'blue' }}>
         Go to Login
       </Link>
     </View>

@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 
-const Login = () => {
+const UserTypeSelect = () => {
   const router = useRouter();
 
   return (
@@ -80,4 +80,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Login;
+export default UserTypeSelect;
