@@ -1,3 +1,5 @@
+import AntDesign from '@expo/vector-icons/AntDesign';
+import Feather from '@expo/vector-icons/Feather';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function LoginChoice() {
@@ -20,12 +22,19 @@ export default function LoginChoice() {
       </View>
 
       <TouchableOpacity style={styles.phoneButton}>
-        <Text style={styles.buttonText}>Continue with phone</Text>
+        <View style={styles.phoneContent}>
+          <Feather name="phone" size={24} color="black" style={styles.phoneIcon} />
+          <Text style={styles.buttonText}>Continue with phone</Text>
+        </View>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.googleButton}>
-        <Text style={styles.googleText}>Continue with Google</Text>
+        <View style={styles.googleContent}>
+          <AntDesign name="google" size={24} color="black" style={styles.googleIcon} />
+          <Text style={styles.googleText}>Continue with Google</Text>
+        </View>
       </TouchableOpacity>
+
     </View>
   );
 }
@@ -79,6 +88,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#444',
     margin: 5,
   },
+  phoneContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  phoneIcon: {
+    marginRight: 10,
+  },
   phoneButton: {
     backgroundColor:'orange',
     padding: 15,
@@ -98,8 +115,18 @@ const styles = StyleSheet.create({
     color: '#000',
     fontWeight: 'bold',
   },
+  googleContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  googleIcon: {
+    marginRight: 10,
+  },
   googleText: {
     color: '#000',
     fontWeight: 'bold',
+    fontSize: 16,
   },
+  
 });
