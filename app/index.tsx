@@ -1,11 +1,10 @@
 // app/index.tsx
-import Map from '@/components/Map';
 import { Link, useNavigation } from 'expo-router';
 import React, { useLayoutEffect, useState } from 'react';
 import { Text, View } from 'react-native';
 
 export default function Index() {
-  const [isAuthenticated, setIsAuthenticated] = useState<Boolean>(true);
+  const [isAuthenticated, setIsAuthenticated] = useState<Boolean>(false);
   const navigation = useNavigation();
 
   useLayoutEffect(() => {
@@ -17,7 +16,8 @@ export default function Index() {
 
   if (isAuthenticated) {
     return (
-      <Map />
+      <></>
+      // <Map />
     )
   } else {
     return (

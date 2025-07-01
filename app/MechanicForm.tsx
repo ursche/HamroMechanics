@@ -2,7 +2,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import React, { useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
-export default function Mechanic() {
+export default function MechanicForm() {
   const [firstname, setFirstname] = useState('');
   const [lastname, setLastname] = useState('');
   const [nationalId, setNationalId] = useState<DocumentPicker.DocumentPickerAsset | null>(null);
