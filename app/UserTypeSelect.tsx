@@ -1,8 +1,38 @@
+import { UserContext } from '@/context/UserContext';
 import { useRouter } from 'expo-router';
+import { useContext } from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
+
 const UserTypeSelect = () => {
+
   const router = useRouter();
+
+  const userContext = useContext(UserContext);
+  if (!userContext){
+    return;
+  }
+  const {user, setUser} = userContext;
+  console.log(user);
+
+
+  const handleUserRole = () => {
+    setUser(prev => ({
+      ...prev,
+      role: 'customer',
+    }));
+
+    router.push('/UserForm');
+  }
+
+  const handleMechanicRole = () => {
+    setUser(prev => ({
+      ...prev,
+      role: 'mechanic',
+    }));
+
+    router.push('/MechanicForm');
+  }
 
   return (
     <View style={styles.container}>
@@ -13,14 +43,14 @@ const UserTypeSelect = () => {
 
       <TouchableOpacity
         style={styles.userButton}
-        onPress={() => router.push('/user')}  // change '/user' to your user screen route
+        onPress={handleUserRole}  
       >
         <Text style={styles.buttonText}>User</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
         style={styles.mechanicButton}
-        onPress={() => router.push('/mechanic')} // change '/mechanic' to your mechanic screen route
+        onPress={handleMechanicRole} 
       >
         <Text style={styles.buttonText}>Mechanic</Text>
       </TouchableOpacity>

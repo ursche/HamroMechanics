@@ -1,12 +1,29 @@
-import React, { useState } from 'react';
+import { UserContext } from '@/context/UserContext';
+import { useRouter } from 'expo-router';
+import React, { useContext, useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-const PhoneNumber = ({ navigation }: any) => {
+const PhoneNumber = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
 
+  const router = useRouter();
+
+  const userContext = useContext(UserContext);
+  if (!userContext){
+    return;
+  }
+
+  const { user, setUser } = userContext;
+
+
   const handleNext = () => {
-    navigation.navigate('NameScreen'); // Navigate to the next screen
-  };
+    setUser(prev => ({
+      ...prev,
+      phone: phoneNumber
+      }));
+
+      router.push('/UserTypeSelect');
+  }
 
   return (
     <View style={styles.container}>

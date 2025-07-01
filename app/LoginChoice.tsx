@@ -1,8 +1,11 @@
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Feather from '@expo/vector-icons/Feather';
+import { useRouter } from 'expo-router';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function LoginChoice() {
+  const router = useRouter();
+
   return (
     <View style={styles.container}>
       
@@ -21,7 +24,7 @@ export default function LoginChoice() {
         <View style={styles.inactiveDot} />
       </View>
 
-      <TouchableOpacity style={styles.phoneButton}>
+      <TouchableOpacity style={styles.phoneButton} onPress={() => router.push('/PhoneNumber')}>
         <View style={styles.phoneContent}>
           <Feather name="phone" size={24} color="black" style={styles.phoneIcon} />
           <Text style={styles.buttonText}>Continue with phone</Text>
