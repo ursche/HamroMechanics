@@ -1,5 +1,7 @@
+import { UserContext } from '@/context/UserContext';
 import * as DocumentPicker from 'expo-document-picker';
-import React, { useState } from 'react';
+import { useRouter } from 'expo-router';
+import React, { useContext, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 export default function MechanicForm() {
@@ -7,8 +9,20 @@ export default function MechanicForm() {
   const [lastname, setLastname] = useState('');
   const [nationalId, setNationalId] = useState<DocumentPicker.DocumentPickerAsset | null>(null);
   const [license, setLicense] = useState<DocumentPicker.DocumentPickerAsset | null>(null);
+  const [experienceYears, setExperienceYears] = useState('');
+  const [specialization, setSpecialization] = useState('');
   const [affiliatedTo, setAffiliatedTo] = useState('');
   const [affiliationProof, setAffiliationProof] = useState<DocumentPicker.DocumentPickerAsset | null>(null);
+  
+  const router = useRouter();
+
+  // User Context. For user registration
+  const userContext = useContext(UserContext);
+  if (!userContext){
+    return;
+  }
+
+  const {user, setUser} = userContext;
 
   const pickDocument = async (
     setter: React.Dispatch<React.SetStateAction<DocumentPicker.DocumentPickerAsset | null>>
@@ -27,6 +41,7 @@ export default function MechanicForm() {
   };
 
   const handleSubmit = () => {
+    // Form Input Validation
     if (!firstname || !lastname || !nationalId || !license) {
       Alert.alert('Error', 'Please fill all required fields.');
       return;
@@ -37,8 +52,21 @@ export default function MechanicForm() {
       return;
     }
 
-    Alert.alert('Success', 'Mechanic form submitted successfully!');
+    setUser(prev => ({
+      ...prev,
+      full_name: firstname + " " + lastname,
+      experience_years: Number(experienceYears),
+      specialization: specialization,
+      affiliated_to: affiliatedTo,
+      citizenship_doc: nationalId,
+      license_doc: license,
+      company_affiliation_doc: affiliationProof
+    }))
     // Add your form submission logic here
+    console.log(user);
+
+    router.push('/Map');
+    
   };
 
   return (
@@ -72,6 +100,13 @@ export default function MechanicForm() {
           </Pressable>
         )}
       </View>
+
+      <Text style={styles.label}>Experience Years *</Text>
+      <TextInput style={styles.input} keyboardType='numeric' value={experienceYears} onChangeText={setExperienceYears} />
+
+      <Text style={styles.label}>Specialization *</Text>
+      <TextInput style={styles.input} value={specialization} onChangeText={setSpecialization} />
+      
 
       <Text style={styles.label}>Affiliated To (Optional)</Text>
       <TextInput style={styles.input} value={affiliatedTo} onChangeText={setAffiliatedTo} />
@@ -113,14 +148,17 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 4,
+    // marginBottom: 4,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#888',
+    borderRadius: 6,
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
+    paddingVertical: 10,
+    // marginBottom: 20,
+    fontSize: 16,
+    color: '#000',
   },
   fileContainer: {
     flexDirection: 'row',

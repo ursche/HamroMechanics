@@ -10,6 +10,7 @@ type User = {
   // if role == 'mechanic'
   experience_years?: number;
   specialization?: string;
+  affiliated_to?: string;
 
   // file
   citizenship_doc?: any;
