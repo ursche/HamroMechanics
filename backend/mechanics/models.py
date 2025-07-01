@@ -14,6 +14,7 @@ class MechanicProfile(models.Model):
     current_lng = models.FloatField(null=True, blank=True)
     experience_years = models.IntegerField(default=0)
     specialization = models.CharField(max_length=100, blank=True)
+    affiliated_to = models.CharField(max_length=100, null=True, blank=True)
 
     # Docs
     citizenship_doc = models.FileField(upload_to=mechanic_doc_upload_path, null=True, blank=True)
