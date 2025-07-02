@@ -2,6 +2,7 @@
 import { Link, useNavigation } from 'expo-router';
 import React, { useLayoutEffect, useState } from 'react';
 import { Text, View } from 'react-native';
+import Map from './Map';
 
 export default function Index() {
   const [isAuthenticated, setIsAuthenticated] = useState<Boolean>(false);
@@ -16,8 +17,7 @@ export default function Index() {
 
   if (isAuthenticated) {
     return (
-      <></>
-      // <Map />
+      <Map />
     )
   } else {
     return (
