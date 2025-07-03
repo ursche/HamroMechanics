@@ -5,7 +5,7 @@ import { Text, View } from 'react-native';
 import Map from './Map';
 
 export default function Index() {
-  const [isAuthenticated, setIsAuthenticated] = useState<Boolean>(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<Boolean>(true);
   const navigation = useNavigation();
 
   useLayoutEffect(() => {
