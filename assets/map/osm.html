@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Basic Leaflet Map</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-sA+pqj7+xPpE9gq5g+P5mckCpMkNvAXXDx0Zb5zPOtM=" crossorigin="" />
+
+    <style>
+        /* Make the map full screen */
+        html,
+        body,
+        #map {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-oGHe3jdYex99+nC6AwixQEq2zlnIQaTGdN5q6rJZynM=" crossorigin=""></script>
+
+    <script>
+        // Initialize the map and set its view to chosen geographical coordinates and zoom level
+        const map = L.map('map').setView([27.7, 85.3], 13);
+
+        // Add OpenStreetMap tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Add a marker at the center
+        L.marker([27.7, 85.3]).addTo(map)
+            .bindPopup('Hello! This is the center of the map.')
+            .openPopup();
+    </script>
+</body>
+
+</html>

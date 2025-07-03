@@ -65,7 +65,7 @@ export default function UserForm() {
       />
 
       <View style={styles.button}>
-        <Button title="Submit" onPress={handleSubmit} color="#007AFF" />
+        <Button title="Submit" onPress={handleSubmit} color="orange" />
       </View>
     </ScrollView>
   );
@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
     marginBottom: 30,
     fontWeight: 'bold',
     textAlign: 'center',
-    color: '#1a73e8',
+    color: 'black',
   },
   label: {
     fontSize: 16,
@@ -109,5 +109,6 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 12,
+    
   },
 });
