@@ -1,37 +1,46 @@
 // app/index.tsx
-import { Link, useNavigation } from 'expo-router';
-import React, { useLayoutEffect, useState } from 'react';
-import { Text, View } from 'react-native';
-import Map from './Map';
+import {  useRouter } from 'expo-router';
+import React, {  useEffect } from 'react';
+import { Text, View, Image, StyleSheet } from 'react-native';
+
+
 
 export default function Index() {
-  const [isAuthenticated, setIsAuthenticated] = useState<Boolean>(true);
-  const navigation = useNavigation();
+    const router = useRouter();
 
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerShown: !isAuthenticated,
-      title: 'Home',
-    });
-  }, [isAuthenticated]);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      router.replace('/main');
+    }, 5000); // Show orange screen for 3 seconds
 
-  if (isAuthenticated) {
-    return (
-      <Map />
-    )
-  } else {
-    return (
-      <View style={{ flex:1, justifyContent:'center', alignItems:'center' }}>
-        <Text>Welcome to our Auto Mobile service. We need a logo now</Text>
-        {/* Link to login page */}
-        <Link href="/LoginChoice" style={{ marginTop: 20, fontSize: 18, color: 'blue' }}>
-          Go to Login
-        </Link>
-    </View>
-    )
-  }
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+      <View style={styles.container}>
+        <Image
+          source={require('../assets/images/logo.png')} // your logo image path
+          style={styles.logo}
+        />
+      </View>
+    );
 }
 
-export const options = {
-  title: 'Home',
-};
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#e0dcd9', // optional background after splash
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  logo: {
+    width: 180,
+    height: 180,
+    resizeMode: 'contain',
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: '#000'
+  }
+});
+
+
