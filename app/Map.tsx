@@ -203,26 +203,45 @@ function generateHtml(lat: number, lng: number, mechanics: MechanicInfo[]) {
     <div id="map"></div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-      const map = L.map('map').setView([${lat}, ${lng}], 13);
+      const userLat = ${lat};
+      const userLng = ${lng};
+
+      function haversineDistance(lat1, lon1, lat2, lon2) {
+        const toRad = angle => (angle * Math.PI) / 180;
+        const R = 6371; // Radius of the Earth in km
+        const dLat = toRad(lat2 - lat1);
+        const dLon = toRad(lon2 - lon1);
+        const a =
+          Math.sin(dLat / 2) ** 2 +
+          Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+          Math.sin(dLon / 2) ** 2;
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c; // in kilometers
+      }
+
+      const map = L.map('map').setView([userLat, userLng], 13);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '© OpenStreetMap contributors'
       }).addTo(map);
 
       // Add marker for user location
-      L.marker([${lat}, ${lng}]).addTo(map)
+      L.marker([userLat, userLng]).addTo(map)
         .bindPopup('You are here!')
         .openPopup();
 
       const mechanics = ${JSON.stringify(mechanics)};
       mechanics.forEach(m => {
         if (m.location) {
+          const dist = haversineDistance(userLat, userLng, m.location.latitude, m.location.longitude).toFixed(2);
+          const popupContent =
+            '<b>' + m.name + '</b><br/>' +
+            (m.isVerified ? 'Verified' : 'Not Verified') + '<br/>' +
+            'Rating: ' + m.rating + '<br/>' +
+            'Distance: ' + dist + ' km';
+
           L.marker([m.location.latitude, m.location.longitude]).addTo(map)
-            .bindPopup(
-              '<b>' + m.name + '</b><br/>' +
-              (m.isVerified ? 'Verified' : 'Not Verified') + '<br/>' +
-              'Rating: ' + m.rating
-            );
+            .bindPopup(popupContent);
         }
       });
     </script>
@@ -230,6 +249,7 @@ function generateHtml(lat: number, lng: number, mechanics: MechanicInfo[]) {
   </html>
   `;
 }
+
 
 export default function LeafletMap() {
   const [location, setLocation] = useState<LocationCoords | null>(null);

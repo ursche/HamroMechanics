@@ -39,7 +39,7 @@ const UserTypeSelect = () => {
       <Text style={styles.heading}>Are you a user or a mechanic?</Text>
       <Text style={styles.subText}>You can change the mode later</Text>
 
-      <Image source={require('../assets/images/loginphoto.png')} style={styles.image} />
+      <Image source={require('@/assets/images/loginphoto.png')} style={styles.image} />
 
       <TouchableOpacity
         style={styles.userButton}
