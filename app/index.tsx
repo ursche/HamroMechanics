@@ -1,7 +1,7 @@
 // app/index.tsx
-import {  useRouter } from 'expo-router';
-import React, {  useEffect } from 'react';
-import { Text, View, Image, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
+import React, { useEffect } from 'react';
+import { Image, StyleSheet, View } from 'react-native';
 
 
 
@@ -10,8 +10,8 @@ export default function Index() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      router.replace('/main');
-    }, 5000); // Show orange screen for 3 seconds
+      router.replace('/LoginChoice');
+    }, 5000);
 
     return () => clearTimeout(timer);
   }, []);

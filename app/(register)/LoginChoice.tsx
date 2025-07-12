@@ -11,7 +11,7 @@ export default function LoginChoice() {
       
 
       <Image
-        source={require('../assets/images/logo.png')} // Replace with your actual image
+        source={require('@/assets/images/logo.png')} // Replace with your actual image
         style={styles.image}
         resizeMode="contain"
       />
