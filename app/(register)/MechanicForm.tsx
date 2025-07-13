@@ -1,5 +1,7 @@
 import { UserContext } from '@/context/UserContext';
+import axios from 'axios';
 import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system';
 import { useRouter } from 'expo-router';
 import React, { useContext, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -40,34 +42,73 @@ export default function MechanicForm() {
     }
   };
 
-  const handleSubmit = () => {
-    // Form Input Validation
+  const fileToBase64 = async (fileUri: string) => {
+    return await FileSystem.readAsStringAsync(fileUri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+  };
+
+  const handleSubmit = async () => {
     if (!firstname || !lastname || !nationalId || !license) {
       Alert.alert('Error', 'Please fill all required fields.');
       return;
     }
-
+  
     if (affiliatedTo && !affiliationProof) {
       Alert.alert('Error', 'Please upload proof of affiliation.');
       return;
     }
-
-    setUser(prev => ({
-      ...prev,
-      full_name: firstname + " " + lastname,
-      experience_years: Number(experienceYears),
-      specialization: specialization,
-      affiliated_to: affiliatedTo,
-      citizenship_doc: nationalId,
-      license_doc: license,
-      company_affiliation_doc: affiliationProof
-    }))
-    // Add your form submission logic here
-    console.log(user);
-
-    router.push('/Map');
-    
+  
+    const formData = new FormData();
+  
+    formData.append('phone', user.phone);
+    formData.append('email', user.email);
+    formData.append('role', user.role);
+  
+    formData.append('full_name', `${firstname} ${lastname}`);
+    formData.append('affiliated_to', affiliatedTo);
+    formData.append('specialization', specialization);
+    formData.append('experience_years', experienceYears);
+  
+    formData.append('citizenship_doc', {
+      uri: nationalId.uri,
+      name: nationalId.name,
+      type: nationalId.mimeType || 'application/pdf',
+    });
+  
+    formData.append('license_doc', {
+      uri: license.uri,
+      name: license.name,
+      type: license.mimeType || 'application/pdf',
+    });
+  
+    if (affiliationProof) {
+      formData.append('company_affiliation_doc', {
+        uri: affiliationProof.uri,
+        name: affiliationProof.name,
+        type: affiliationProof.mimeType || 'application/pdf',
+      });
+    }
+  
+    try {
+      const response = await axios.post(
+        'http://192.168.1.73:8000/api/users/register/',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+  
+      console.log('Success:', response.data);
+      router.push('/Map');
+    } catch (err: any) {
+      console.error('Upload error:', err.response?.data || err.message);
+      Alert.alert('Upload failed', err.response?.data?.detail || 'Something went wrong.');
+    }
   };
+  
 
   return (
     <View style={styles.container}>

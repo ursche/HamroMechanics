@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-gluda=(gk54a*^yp@_-v1l23oqa-#s++5r&m#$9kch*o142iq=
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
