@@ -1,44 +1,56 @@
 import { UserContext } from '@/context/UserContext';
 import { useRouter } from 'expo-router';
 import React, { useContext, useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
-const PhoneNumber = () => {
-  const [phoneNumber, setPhoneNumber] = useState('');
+const PasswordScreen = () => {
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const router = useRouter();
 
   const userContext = useContext(UserContext);
-  if (!userContext){
-    return;
+  if (!userContext) {
+    return null;
   }
 
   const { user, setUser } = userContext;
 
-
   const handleNext = () => {
     setUser(prev => ({
       ...prev,
-      phone: phoneNumber
-      }));
+      password: password,
+    }));
 
-      router.push('/Password');
-  }
+    router.push('/UserTypeSelect'); // Replace with your actual screen route
+  };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Join us via phone number</Text>
-      <Text style={styles.subText}>We’ll text a code to verify your phone</Text>
+      <Text style={styles.heading}>Create a Password</Text>
+      <Text style={styles.subText}>
+        Your password must be at least 6 characters
+      </Text>
 
       <View style={styles.inputWrapper}>
-        <Text style={styles.flag}>🇳🇵</Text>
         <TextInput
           style={styles.input}
-          keyboardType="phone-pad"
-          placeholder="+977 98XXXXXXXX"
-          value={phoneNumber}
-          onChangeText={setPhoneNumber}
+          placeholder="Enter your password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry={!showPassword}
         />
+        <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+          <Text style={styles.toggleText}>
+            {showPassword ? 'Hide' : 'Show'}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
@@ -48,7 +60,7 @@ const PhoneNumber = () => {
   );
 };
 
-export default PhoneNumber;
+export default PasswordScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -77,14 +89,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     height: 50,
     marginBottom: 30,
-  },
-  flag: {
-    fontSize: 20,
-    marginRight: 8,
+    justifyContent: 'space-between',
   },
   input: {
     flex: 1,
     fontSize: 16,
+  },
+  toggleText: {
+    fontSize: 14,
+    color: 'blue',
+    marginLeft: 10,
   },
   nextButton: {
     backgroundColor: 'orange',
