@@ -11,7 +11,7 @@ export default function Index() {
   useEffect(() => {
     const timer = setTimeout(() => {
       router.replace('/LoginChoice');
-    }, 5000);
+    }, 100);
 
     return () => clearTimeout(timer);
   }, []);
