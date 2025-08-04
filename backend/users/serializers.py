@@ -19,6 +19,7 @@ class UserSerializer(serializers.ModelSerializer):
         user.set_password(password)
         user.save()
 
+
         if user.role == 'mechanic' and not hasattr(user, 'mechanic_profile'):
             MechanicProfile.objects.create(user=user)
 
