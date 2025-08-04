@@ -1,10 +1,8 @@
-import { AuthProvider } from "@/context/AuthContext";
 import { UserProvider } from "@/context/UserContext";
 import { Stack } from "expo-router";
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
       <UserProvider>
         <Stack>
           <Stack.Screen name="LoginChoice" options={{ title: 'Choose a registration method' }} />
@@ -15,6 +13,5 @@ export default function RootLayout() {
           <Stack.Screen name="UserTypeSelect" options={{ title: 'User Selection' }} />
         </Stack>
       </UserProvider>
-    </AuthProvider>
   );
 }
