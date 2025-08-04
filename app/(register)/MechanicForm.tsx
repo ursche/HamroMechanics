@@ -103,7 +103,7 @@ export default function MechanicForm() {
       );
   
       console.log('Success:', response.data);
-      router.push('/Map');
+      router.push('/request');
     } catch (err: any) {
       console.error('Upload error:', err.response?.data || err.message);
       Alert.alert('Upload failed', err.response?.data?.detail || 'Something went wrong.');
