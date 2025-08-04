@@ -6,6 +6,7 @@ type User = {
   email: string;
   role: string;
   phone: string;
+  password: string;  // added password field
 
   // if role == 'mechanic'
   experience_years?: number;
@@ -31,6 +32,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     email: '',
     role: '',
     phone: '',
+    password: '',            // initialize password here
     experience_years: 0,
     specialization: '',
     // optional docs set later via setUser

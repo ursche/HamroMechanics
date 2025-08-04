@@ -64,6 +64,7 @@ export default function MechanicForm() {
     formData.append('phone', user.phone);
     formData.append('email', user.email);
     formData.append('role', user.role);
+    formData.append('password', user.password);  // <-- add password here
   
     formData.append('full_name', `${firstname} ${lastname}`);
     formData.append('affiliated_to', affiliatedTo);
@@ -108,6 +109,7 @@ export default function MechanicForm() {
       Alert.alert('Upload failed', err.response?.data?.detail || 'Something went wrong.');
     }
   };
+  
   
 
   return (
