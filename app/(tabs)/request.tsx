@@ -1,6 +1,6 @@
 import Map from '@/app/Map';
 import * as ImagePicker from 'expo-image-picker';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Alert,
   Image,
@@ -13,12 +13,52 @@ import {
   View,
 } from 'react-native';
 
+import BASE_API_URL from '@/utils/baseApi';
+import axios from 'axios';
+import * as Location from 'expo-location';
+import * as SecureStorage from 'expo-secure-store';
+
+type LocationCoords = {
+  latitude: number;
+  longitude: number;
+};
+
+type MechanicInfo = {
+  name: string;
+  isVerified: boolean;
+  location: LocationCoords | null;
+  // rating: number;
+};
+
+
+// [
+//   { name: 'Mechanic 1', isVerified: true, location: { latitude: 27.67716, longitude: 85.34933 }, rating: 4.0 },
+//   { name: 'Mechanic 2', isVerified: false, location: { latitude: 27.6916, longitude: 85.33766 }, rating: 4.5 },
+//   { name: 'Mechanic 3', isVerified: true, location: { latitude: 27.66773, longitude: 85.38213 }, rating: 5.0 },
+// ]
 
 export default function RequestService() {
   const [problemStatement, setProblemStatement] = useState('');
   const [photos, setPhotos] = useState<string[]>([]);
   const [startRequest, setStartRequest] = useState<Boolean>(false);
   const [showRequestButton, setShowRequestButton] = useState<Boolean>(true);
+
+  const [location, setLocation] = useState<Location.LocationObject|null>(null);
+  const [errorMsg, setErrorMsg] = useState<String | null>(null);
+  const [mechanics, setMechanics] = useState<MechanicInfo[]|null>(null);
+
+
+  useEffect(() => {
+    (async () => {
+      // Ask for permission
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        setErrorMsg("Permission to access location was denied");
+        return;
+      }
+    })();
+  }, []);
+
 
   // Request permission and pick multiple images from gallery
   const pickImages = async () => {
@@ -48,7 +88,7 @@ export default function RequestService() {
     setPhotos(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!problemStatement.trim()) {
       Alert.alert('Error', 'Please enter a problem statement.');
       return;
@@ -61,8 +101,37 @@ export default function RequestService() {
     console.log('Problem:', problemStatement);
     console.log('Photos:', photos);
     setStartRequest(false);
-    Alert.alert('Submitted', 'Your request has been submitted.');
-    // Send data to backend here
+
+
+    // Get current location
+    let currentLocation = await Location.getCurrentPositionAsync({});
+    const lat = currentLocation.coords.latitude;
+    const lng = currentLocation.coords.longitude;
+
+    const access = await SecureStorage.getItemAsync("access_token");
+
+    try{
+      
+      const response = await axios.get(`${BASE_API_URL}/api/mechanics/list/?lat=${lat}&lng=${lng}`, {
+        headers: {
+          Authorization: `Bearer ${access}`,
+        }
+      });
+
+      const mechanicData = [];
+      response.data.forEach(element => {
+        mechanicData.push({name: element.user.full_name, location: {latitude: element.current_lat, longitude: element.current_lng}, isVerified: element.is_verified});
+      });
+
+      setMechanics(mechanicData)
+
+    }catch(err:any){
+      Alert.alert('Search Failed', err.response?.data?.detail || 'Something went wrong.');
+    }
+    setShowRequestButton(true);
+
+
+
   };
 
   const handleRequestButton = () => {
@@ -109,11 +178,11 @@ export default function RequestService() {
   else{
     return (
       <View style={styles.mapContainer}>
-        <Map />
+        <Map mechanics={mechanics}/>
         {showRequestButton && (
           <View style={styles.buttonContainer}>
             <TouchableOpacity style={styles.floatingButton} onPress={handleRequestButton}>
-              <Text style={styles.buttonText}>Request</Text>
+              <Text style={styles.buttonText}>Search</Text>
             </TouchableOpacity>
           </View>
         )}

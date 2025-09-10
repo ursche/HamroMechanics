@@ -1,7 +1,23 @@
 // SettingsScreen.tsx
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import BASE_API_URL from '@/utils/baseApi';
 import { Ionicons } from '@expo/vector-icons';
+import axios from 'axios';
+import { router } from 'expo-router';
+import React from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+import * as SecureStorage from 'expo-secure-store';
+
+const handleLogout = async () => {
+  try{
+    await axios.get(`${BASE_API_URL}/api/users/logout/`);
+  }catch{}
+
+  SecureStorage.deleteItemAsync("access_token");
+  SecureStorage.deleteItemAsync("refresh_token");
+
+  router.replace('/LoginChoice');
+}
 
 export default function Setting() {
   return (
@@ -13,7 +29,8 @@ export default function Setting() {
       <SettingItem label="Rules and Terms" />
       <SettingItem label="Help" />
       <SettingItem label="Safety" />
-      <SettingItem label="Log out" />
+      <SettingItem label="Log out" onPress={handleLogout} 
+      />
       <TouchableOpacity>
         <Text style={styles.deleteText}>Delete account</Text>
       </TouchableOpacity>
@@ -21,9 +38,9 @@ export default function Setting() {
   );
 }
 
-function SettingItem({ label, sub }: { label: string; sub?: string }) {
+function SettingItem({ label, sub, onPress }: { label: string; sub?: string; onPress?: VoidFunction}) {
   return (
-    <TouchableOpacity style={styles.item}>
+    <TouchableOpacity style={styles.item} onPress={onPress}>
       <View>
         <Text style={styles.label}>{label}</Text>
         {sub && <Text style={styles.sub}>{sub}</Text>}

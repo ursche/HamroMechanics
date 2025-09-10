@@ -28,7 +28,7 @@ const PhoneNumber = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>Join us via phone number</Text>
-      <Text style={styles.subText}>We’ll text a code to verify your phone</Text>
+      {/* <Text style={styles.subText}>We’ll text a code to verify your phone</Text> */}
 
       <View style={styles.inputWrapper}>
         <Text style={styles.flag}>🇳🇵</Text>

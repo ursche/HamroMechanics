@@ -1,13 +1,19 @@
 import { UserContext } from '@/context/UserContext';
+import saveTokens from '@/utils/saveTokens';
+import axios from 'axios';
 import { useRouter } from 'expo-router';
 import React, { useContext, useState } from 'react';
 import {
+  Alert,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
+
+
+import BASE_API_URL from '@/utils/baseApi';
 
 const PasswordScreen = () => {
   const [password, setPassword] = useState('');
@@ -22,13 +28,45 @@ const PasswordScreen = () => {
 
   const { user, setUser } = userContext;
 
-  const handleNext = () => {
+  const handleNext = async () => {
     setUser(prev => ({
       ...prev,
       password: password,
     }));
 
-    router.push('/UserTypeSelect'); // Replace with your actual screen route
+    const formData = new FormData();
+
+    formData.append('phone', user.phone);
+    formData.append('password', password)
+
+    try{
+      const response = await axios.post(
+        `${BASE_API_URL}/api/users/token/`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      const data = response.data;
+      await saveTokens(data.access, data.refresh);
+
+  
+      console.log('Register login Response:', response.data);
+
+      if (response.data){
+        router.push('/request');
+      }
+      router.push('/UserTypeSelect');
+
+    } catch (err: any) {
+      console.error('Upload error:', err.response?.data || err.message);
+      Alert.alert('Upload failed', err.response?.data?.detail || 'Something went wrong.');
+      router.push('/UserTypeSelect');
+    }
+    
+
   };
 
   return (

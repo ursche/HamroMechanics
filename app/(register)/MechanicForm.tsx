@@ -1,10 +1,14 @@
 import { UserContext } from '@/context/UserContext';
+import BASE_API_URL from '@/utils/baseApi';
 import axios from 'axios';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
 import { useRouter } from 'expo-router';
 import React, { useContext, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+
+// for saving access and refresh token for auth
+import saveTokens from '@/utils/saveTokens';
 
 export default function MechanicForm() {
   const [firstname, setFirstname] = useState('');
@@ -93,7 +97,7 @@ export default function MechanicForm() {
   
     try {
       const response = await axios.post(
-        'http://192.168.1.73:8000/api/users/register/',
+        `${BASE_API_URL}/api/users/register/`,
         formData,
         {
           headers: {
@@ -101,6 +105,18 @@ export default function MechanicForm() {
           },
         }
       );
+
+      const data = response.data;
+      await saveTokens(data.access, data.refresh);
+
+      // dont save password in state after registering
+      setUser({
+        full_name: data.user.full_name,
+        email: data.user.email,
+        role: data.user.role,
+        phone: data.user.phone,
+        password: "",
+      });
   
       console.log('Success:', response.data);
       router.push('/request');
