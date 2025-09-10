@@ -25,3 +25,12 @@ class UserSerializer(serializers.ModelSerializer):
 
         return user
 
+
+class UserInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            'id',
+            'full_name',
+            'phone'
+        ]

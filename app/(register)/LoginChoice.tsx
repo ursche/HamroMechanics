@@ -1,10 +1,21 @@
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Feather from '@expo/vector-icons/Feather';
 import { useRouter } from 'expo-router';
+import * as SecureStore from "expo-secure-store";
+import { useEffect } from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
 
 export default function LoginChoice() {
   const router = useRouter();
+
+  useEffect(() => {
+    const refresh = SecureStore.getItem("refresh_token");
+    if (refresh){
+      router.replace('/request');
+    };
+    
+  })
 
   return (
     <View style={styles.container}>
