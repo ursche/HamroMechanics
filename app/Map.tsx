@@ -74,10 +74,11 @@ function generateHtml(lat: number, lng: number, mechanics: MechanicInfo[]) {
         if (m.location) {
           const dist = haversineDistance(userLat, userLng, m.location.latitude, m.location.longitude).toFixed(2);
           const popupContent =
-            '<b>' + m.name + '</b><br/>' +
-            (m.isVerified ? 'Verified' : 'Not Verified') + '<br/>' +
-            'Rating: ' + m.rating + '<br/>' +
-            'Distance: ' + dist + ' km';
+  '<b>' + m.name + '</b><br/>' +
+  (m.isVerified ? 'Verified' : 'Not Verified') + '<br/>' +
+  'Rating: ' + m.rating + '<br/>' +
+  'Distance: ' + dist + ' km<br/>' + '<button style="margin-top:10px; background-color: orange; color: #000; padding: 5px; width:100%; border-radius:10px;" onclick="requestMechanic(m.name)">Send Request</button>';
+
 
           L.marker([m.location.latitude, m.location.longitude])
             .addTo(map)
