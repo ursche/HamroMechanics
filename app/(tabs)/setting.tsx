@@ -2,7 +2,7 @@
 import BASE_API_URL from '@/utils/baseApi';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
-import { router } from 'expo-router';
+import { router, useRouter } from 'expo-router';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -10,8 +10,16 @@ import * as SecureStorage from 'expo-secure-store';
 
 const handleLogout = async () => {
   try{
-    await axios.get(`${BASE_API_URL}/api/users/logout/`);
-  }catch{}
+    const accessToken = await SecureStorage.getItemAsync("access_token");
+    const refreshToken = await SecureStorage.getItemAsync("refresh_token");
+
+    await axios.post(`${BASE_API_URL}/api/users/logout/`, {'refresh': refreshToken}, {
+      headers: {Authorization: `Bearer ${accessToken}`},
+      
+    });
+  }catch(e){
+    console.error(e);
+  }
 
   SecureStorage.deleteItemAsync("access_token");
   SecureStorage.deleteItemAsync("refresh_token");
@@ -20,6 +28,8 @@ const handleLogout = async () => {
 }
 
 export default function Setting() {
+  const router = useRouter();
+
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.header}>Settings</Text>
@@ -29,8 +39,7 @@ export default function Setting() {
       <SettingItem label="Rules and Terms" />
       <SettingItem label="Help" />
       <SettingItem label="Safety" />
-      <SettingItem label="Log out" onPress={handleLogout} 
-      />
+      <SettingItem label="Log out" onPress={handleLogout} />
       <TouchableOpacity>
         <Text style={styles.deleteText}>Delete account</Text>
       </TouchableOpacity>

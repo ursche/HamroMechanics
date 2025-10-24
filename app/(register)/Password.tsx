@@ -4,12 +4,11 @@ import axios from 'axios';
 import { useRouter } from 'expo-router';
 import React, { useContext, useState } from 'react';
 import {
-  Alert,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 
 
@@ -51,18 +50,21 @@ const PasswordScreen = () => {
       );
       const data = response.data;
       await saveTokens(data.access, data.refresh);
+      console.log(data);
+      
 
   
-      console.log('Register login Response:', response.data);
+      // console.log('Register login Response:', response.data);
 
-      if (response.data){
+      if (data){
+
         router.push('/request');
       }
       router.push('/UserTypeSelect');
 
     } catch (err: any) {
-      console.error('Upload error:', err.response?.data || err.message);
-      Alert.alert('Upload failed', err.response?.data?.detail || 'Something went wrong.');
+      // console.error('Upload error:', err.response?.data || err.message);
+      // Alert.alert('Upload failed', err.response?.data?.detail || 'Something went wrong.');
       router.push('/UserTypeSelect');
     }
     
@@ -71,7 +73,7 @@ const PasswordScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Create a Password</Text>
+      <Text style={styles.heading}>Your Password</Text>
       <Text style={styles.subText}>
         Your password must be at least 6 characters
       </Text>
