@@ -1,4 +1,3 @@
-import Map from '@/app/Map';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useState } from 'react';
 import {
@@ -10,13 +9,15 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 
+import LeafletMap from '@/app/Map';
 import BASE_API_URL from '@/utils/baseApi';
 import axios from 'axios';
 import * as Location from 'expo-location';
 import * as SecureStorage from 'expo-secure-store';
+import { jwtDecode } from 'jwt-decode';
 
 type LocationCoords = {
   latitude: number;
@@ -24,6 +25,7 @@ type LocationCoords = {
 };
 
 type MechanicInfo = {
+  id: number;
   name: string;
   isVerified: boolean;
   location: LocationCoords | null;
@@ -42,14 +44,26 @@ export default function RequestService() {
   const [photos, setPhotos] = useState<string[]>([]);
   const [startRequest, setStartRequest] = useState<Boolean>(false);
   const [showRequestButton, setShowRequestButton] = useState<Boolean>(true);
+  const [userRole, setUserRole] = useState<String>("");
+
+
 
   const [location, setLocation] = useState<Location.LocationObject|null>(null);
   const [errorMsg, setErrorMsg] = useState<String | null>(null);
   const [mechanics, setMechanics] = useState<MechanicInfo[]|null>(null);
 
+  const [acceptedRequest, setAcceptedRequest] = useState<{
+    roomName: string;
+    mechanicName: string;
+  } | null>(null);
+
+
+
 
   useEffect(() => {
     (async () => {
+      const _ur:Map<string, any> = jwtDecode((await SecureStorage.getItemAsync("access_token"))!);  
+      setUserRole(_ur["role"]);
       // Ask for permission
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
@@ -58,6 +72,28 @@ export default function RequestService() {
       }
     })();
   }, []);
+
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      const access = await SecureStorage.getItemAsync("access_token");
+      const res = await axios.get(`${BASE_API_URL}/api/tracking/notifications/list/`, {
+        headers: { Authorization: `Bearer ${access}` }
+      });
+      const currentUser = jwtDecode(access!);
+  
+      const accepted = res.data.find(n => n.from_user.id === currentUser["user_id"] && n.accepted);
+      if (accepted) {
+        setAcceptedRequest({
+          roomName: `tracking_${accepted.id}`,
+          mechanicName: accepted.to_user.full_name
+        });
+        clearInterval(interval);
+      }
+    }, 3000);
+  
+    return () => clearInterval(interval);
+  }, []);
+  
 
 
   // Request permission and pick multiple images from gallery
@@ -118,9 +154,9 @@ export default function RequestService() {
         }
       });
 
-      const mechanicData = [];
-      response.data.forEach(element => {
-        mechanicData.push({name: element.user.full_name, location: {latitude: element.current_lat, longitude: element.current_lng}, isVerified: element.is_verified});
+      const mechanicData:MechanicInfo[] = [];
+      response.data.forEach((element:any) => {
+        mechanicData.push({id:element.user.id, name: element.user.full_name, location: {latitude: element.current_lat, longitude: element.current_lng}, isVerified: element.is_verified});
       });
 
       setMechanics(mechanicData)
@@ -175,20 +211,32 @@ export default function RequestService() {
       </ScrollView>
     );
   }
-  else{
+  else {
     return (
       <View style={styles.mapContainer}>
-        <Map mechanics={mechanics}/>
-        {showRequestButton && (
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.floatingButton} onPress={handleRequestButton}>
-              <Text style={styles.buttonText}>Search</Text>
-            </TouchableOpacity>
-          </View>
+        {/* If request accepted, show live tracking map */}
+        {acceptedRequest ? (
+          <LeafletMap 
+          mechanics={mechanics} images={photos} description={problemStatement}
+          />
+        ) : (
+          <>
+            {/* Normal map with mechanics */}
+            <LeafletMap mechanics={mechanics} images={photos} description={problemStatement} />
+  
+            {showRequestButton && !(userRole==="mechanic") && (
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity style={styles.floatingButton} onPress={handleRequestButton}>
+                  <Text style={styles.buttonText}>Search</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </>
         )}
       </View>
-    )
+    );
   }
+  
 }
 
 const styles = StyleSheet.create({

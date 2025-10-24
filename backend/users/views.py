@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from users.serializers import UserSerializer
+from users.models import User
 
 class UserCreateAPIView(APIView):
 
@@ -52,3 +53,19 @@ class UserLogoutView(APIView):
             return Response({"detail": "Successfully logged out."}, status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class IsPhoneRegisteredAPIView(APIView):
+    def post(self, request):
+        try:
+            if request.data.get("phone"):
+                phone = request.data.get("phone")
+                obj = User.objects.get(phone=phone)
+
+                if obj:
+                    return Response({"detail": "EXISTS"})
+            else:
+                return Response({"error": "'phone' is missing."})
+        except e:
+            return Response({"detail": "DOES_NOT_EXISTS"})
+        

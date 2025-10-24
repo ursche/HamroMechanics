@@ -1,5 +1,5 @@
 import axios from 'axios';
-import * as SecureStore from 'expo-secure-store'; // Replace with localStorage if web
+import * as SecureStore from 'expo-secure-store';
 import React, { createContext, ReactNode, useEffect, useState } from 'react';
 
 // -------------------------
