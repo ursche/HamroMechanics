@@ -1,5 +1,7 @@
 from django.urls import path
 from users import views
+from .views import DeleteUserView
+
 
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -15,4 +17,7 @@ urlpatterns = [
 
     path('register/', views.UserCreateAPIView.as_view()),
     path('logout/', views.UserLogoutView.as_view()),
+    path('delete/', DeleteUserView.as_view(), name='delete-user'),
+
+
 ]

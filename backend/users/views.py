@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.shortcuts import get_object_or_404
 
 from users.serializers import UserSerializer
 from users.models import User
@@ -68,4 +69,25 @@ class IsPhoneRegisteredAPIView(APIView):
                 return Response({"error": "'phone' is missing."})
         except e:
             return Response({"detail": "DOES_NOT_EXISTS"})
+        
+
+class DeleteUserView(APIView):
+    permission_classes = [IsAuthenticated]  # Only logged-in users can delete
+
+    def delete(self, request):
+        user = request.user
+
+        # Optional: prevent users from deleting others unless admin
+        if request.user != user and not request.user.is_staff:
+            return Response(
+                {"error": "You do not have permission to delete this user."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        user.delete()
+        return Response(
+            {"message": "User deleted successfully."},
+            status=status.HTTP_204_NO_CONTENT
+        )
+
         

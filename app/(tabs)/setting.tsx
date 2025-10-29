@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import { router, useRouter } from 'expo-router';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import * as SecureStorage from 'expo-secure-store';
 
@@ -27,6 +27,36 @@ const handleLogout = async () => {
   router.replace('/LoginChoice');
 }
 
+const handleDeleteAccount = async () => {
+  Alert.alert(
+    "Confirm Deletion",
+    "Are you sure you want to delete your account? This action cannot be undone.",
+    [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            const accessToken = await SecureStorage.getItemAsync("access_token");
+            await axios.delete(`${BASE_API_URL}/api/users/delete/`, {
+              headers: { Authorization: `Bearer ${accessToken}` },
+            });
+
+            await SecureStorage.deleteItemAsync("access_token");
+            await SecureStorage.deleteItemAsync("refresh_token");
+            router.replace("/LoginChoice");
+            alert("Your account has been deleted.");
+          } catch (error) {
+            console.error(error);
+            alert("Could not delete your account. Please try again.");
+          }
+        },
+      },
+    ]
+  );
+};
+
 export default function Setting() {
   const router = useRouter();
 
@@ -40,7 +70,7 @@ export default function Setting() {
       <SettingItem label="Help" />
       <SettingItem label="Safety" />
       <SettingItem label="Log out" onPress={handleLogout} />
-      <TouchableOpacity>
+      <TouchableOpacity onPress={handleDeleteAccount}>
         <Text style={styles.deleteText}>Delete account</Text>
       </TouchableOpacity>
     </ScrollView>

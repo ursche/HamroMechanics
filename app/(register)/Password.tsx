@@ -4,11 +4,11 @@ import axios from 'axios';
 import { useRouter } from 'expo-router';
 import React, { useContext, useState } from 'react';
 import {
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
 
 
@@ -63,7 +63,7 @@ const PasswordScreen = () => {
       router.push('/UserTypeSelect');
 
     } catch (err: any) {
-      // console.error('Upload error:', err.response?.data || err.message);
+      console.error('Upload error:', err.response?.data || err.message);
       // Alert.alert('Upload failed', err.response?.data?.detail || 'Something went wrong.');
       router.push('/UserTypeSelect');
     }
