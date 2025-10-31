@@ -1,6 +1,5 @@
-import Map from '@/app/Map';
 import * as ImagePicker from 'expo-image-picker';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Alert,
   Image,
@@ -10,8 +9,29 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
+
+import LeafletMap from '@/app/Map';
+import BASE_API_URL from '@/utils/baseApi';
+import axios from 'axios';
+import * as Location from 'expo-location';
+import * as SecureStorage from 'expo-secure-store';
+import { jwtDecode } from 'jwt-decode';
+
+type LocationCoords = {
+  latitude: number;
+  longitude: number;
+};
+
+type MechanicInfo = {
+  id: number;
+  name: string;
+  isVerified: boolean;
+  location: LocationCoords | null;
+  // rating: number;
+};
+
 
 
 export default function RequestService() {
@@ -19,6 +39,60 @@ export default function RequestService() {
   const [photos, setPhotos] = useState<string[]>([]);
   const [startRequest, setStartRequest] = useState<Boolean>(false);
   const [showRequestButton, setShowRequestButton] = useState<Boolean>(true);
+  const [userRole, setUserRole] = useState<String>("");
+
+
+
+  const [location, setLocation] = useState<Location.LocationObject|null>(null);
+  const [errorMsg, setErrorMsg] = useState<String | null>(null);
+  const [mechanics, setMechanics] = useState<MechanicInfo[]|null>(null);
+
+  const [acceptedRequest, setAcceptedRequest] = useState<{
+    mechanicName: string;
+  } | null>(null);
+  const [acceptedRequestIds, setAcceptedRequestIds] = useState([]);
+  const [requestAccepted, setRequestAccepted] = useState<boolean>(false);
+
+
+
+
+  useEffect(() => {
+    (async () => {
+      const _ur:Map<string, any> = jwtDecode((await SecureStorage.getItemAsync("access_token"))!);  
+      setUserRole(_ur["role"]);
+      // Ask for permission
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        setErrorMsg("Permission to access location was denied");
+        return;
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try{
+        const access = await SecureStorage.getItemAsync("access_token");
+        const res = await axios.get(`${BASE_API_URL}/api/tracking/notifications/accepted/`, {
+          headers: { Authorization: `Bearer ${access}` }
+        });
+        const currentUser = jwtDecode(access!);
+        const accepted = res.data["accepted_requests"];
+      
+        if (accepted) {
+          setRequestAccepted(true);
+          setMechanics([{id: accepted["mid"], name: accepted["mechanic_name"], isVerified: accepted["mechanic_is_verified"], location: {latitude: accepted["mechanic_lat"], longitude: accepted["mechanic_lng"]}}]);
+        }
+        clearInterval(interval);
+      }catch(e){
+        console.log("Error occured while checking if notifications are accepted. (request.tsx)", e);
+      }
+    }, 3000);
+  
+    return () => clearInterval(interval);
+  }, []);
+  
+
 
   // Request permission and pick multiple images from gallery
   const pickImages = async () => {
@@ -48,7 +122,7 @@ export default function RequestService() {
     setPhotos(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!problemStatement.trim()) {
       Alert.alert('Error', 'Please enter a problem statement.');
       return;
@@ -61,8 +135,37 @@ export default function RequestService() {
     console.log('Problem:', problemStatement);
     console.log('Photos:', photos);
     setStartRequest(false);
-    Alert.alert('Submitted', 'Your request has been submitted.');
-    // Send data to backend here
+
+
+    // Get current location
+    let currentLocation = await Location.getCurrentPositionAsync({});
+    const lat = currentLocation.coords.latitude;
+    const lng = currentLocation.coords.longitude;
+
+    const access = await SecureStorage.getItemAsync("access_token");
+
+    try{
+      
+      const response = await axios.get(`${BASE_API_URL}/api/mechanics/list/?lat=${lat}&lng=${lng}`, {
+        headers: {
+          Authorization: `Bearer ${access}`,
+        }
+      });
+
+      const mechanicData:MechanicInfo[] = [];
+      response.data.forEach((element:any) => {
+        mechanicData.push({id:element.user.id, name: element.user.full_name, location: {latitude: element.current_lat, longitude: element.current_lng}, isVerified: element.is_verified});
+      });
+
+      setMechanics(mechanicData)
+
+    }catch(err:any){
+      Alert.alert('Search Failed', err.response?.data?.detail || 'Something went wrong.');
+    }
+    setShowRequestButton(true);
+
+
+
   };
 
   const handleRequestButton = () => {
@@ -106,20 +209,38 @@ export default function RequestService() {
       </ScrollView>
     );
   }
-  else{
+  else {
     return (
       <View style={styles.mapContainer}>
-        <Map />
-        {showRequestButton && (
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.floatingButton} onPress={handleRequestButton}>
-              <Text style={styles.buttonText}>Request</Text>
-            </TouchableOpacity>
-          </View>
+        {requestAccepted ? (
+          <>
+            <LeafletMap 
+            mechanics={mechanics} images={photos} description={problemStatement}
+            />
+            <View style={styles.buttonContainer}>
+                  <TouchableOpacity style={styles.floatingButton}>
+                    <Text style={styles.buttonText}>Request accepted</Text>
+                  </TouchableOpacity>
+            </View>
+          </>
+        ) : (
+          <>
+            {/* Normal map with mechanics */}
+            <LeafletMap mechanics={mechanics} images={photos} description={problemStatement} />
+  
+            {showRequestButton && !(userRole==="mechanic") && (
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity style={styles.floatingButton} onPress={handleRequestButton}>
+                  <Text style={styles.buttonText}>Search</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </>
         )}
       </View>
-    )
+    );
   }
+  
 }
 
 const styles = StyleSheet.create({

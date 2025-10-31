@@ -1,9 +1,270 @@
-import { Text } from "react-native";
+import BASE_API_URL from '@/utils/baseApi';
+import axios from 'axios';
+import * as Location from 'expo-location';
 
-export default function Notification() {
+import * as SecureStore from 'expo-secure-store';
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Image,
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+
+const NotificationPage = () => {
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+
+  const API_URL = `${BASE_API_URL}/api/tracking/notifications/list/`;
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const token = await SecureStore.getItemAsync('access_token');
+        // console.log();
+        const response = await axios.get(API_URL, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setNotifications(response.data);
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNotifications();
+  }, []);
+
+  const handleAccept = async (notificationId: number) => {
+    const access = await SecureStore.getItemAsync("access_token");
+
+    try {
+
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        alert('Permission to access location was denied');
+        return;
+      }
+      const loc = await Location.getCurrentPositionAsync({});
+
+       
+      const response = await axios.post(
+        `${BASE_API_URL}/api/tracking/notifications/accept/${notificationId}/${loc.coords.latitude}/${loc.coords.longitude}/`,
+        {},
+        { headers: { Authorization: `Bearer ${access}`} }
+      );
+  
+      Alert.alert("Success", "Request accepted!");
+  
+      // Optionally update the local notification list
+      setNotifications(prev =>
+        prev.map(n =>
+          n.id === notificationId ? { ...n, accepted: true } : n
+        )
+      );
+  
+    } catch (err: any) {
+      Alert.alert("Error", err.response?.data?.detail || "Something went wrong");
+    }
+  };
+  
+
+//   Change this to handle reject
+  const handleUpdate = async (id, action) => {
+    try {
+      const token = await SecureStore.getItemAsync('access_token');
+      await axios.patch(
+        `${BASE_API_URL}/api/tracking/notifications/${id}/`,
+        { accepted: action === 'accept' },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setNotifications((prev) =>
+        prev.map((notif) =>
+          notif.id === id ? { ...notif, accepted: action === 'accept' } : notif
+        )
+      );
+
+      Alert.alert(
+        action === 'accept' ? 'Accepted' : 'Rejected',
+        `Notification has been ${action}ed.`
+      );
+    } catch (error) {
+      console.error('Error updating notification:', error);
+      Alert.alert('Error', 'Failed to update notification.');
+    }
+  };
+
+  const openImageModal = (uri: any) => {
+    setSelectedImage(uri);
+    setModalVisible(true);
+  };
+
+  const renderItem = ({ item }:any) => (
+    <View style={styles.notificationCard}>
+      <Text style={styles.userText}>
+        From: {item.from_user.full_name} → To: {item.to_user.full_name}
+      </Text>
+      <Text
+        style={[styles.statusText, item.accepted ? styles.accepted : styles.pending]}
+      >
+        {item.accepted ? 'Accepted' : 'Pending'}
+      </Text>
+
+      {item.images && item.images.length > 0 && (
+        <FlatList
+          horizontal
+          data={item.images}
+          keyExtractor={(img) => img.id.toString()}
+          renderItem={({ item: img }) => (
+            <TouchableOpacity onPress={() => openImageModal(img.image)}>
+              <Image source={{ uri: img.image }} style={styles.notificationImage} />
+            </TouchableOpacity>
+          )}
+          style={{ marginTop: 10 }}
+        />
+      )}
+
+      {!item.accepted && (
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={[styles.button, styles.acceptButton]}
+            onPress={() => handleAccept(item.id)}
+          >
+            <Text style={styles.buttonText}>Accept</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, styles.rejectButton]}
+            onPress={() => handleUpdate(item.id, 'reject')}
+          >
+            <Text style={styles.buttonText}>Reject</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </View>
+  );
+
+  if (loading) {
     return (
-        <Text>
-            This is notifications page
-        </Text>
+      <View style={styles.loading}>
+        <ActivityIndicator size="large" color="#007AFF" />
+      </View>
     );
-}
+  }
+
+  return (
+    <View style={{ flex: 1 }}>
+      <FlatList
+        data={notifications}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={renderItem}
+        contentContainerStyle={styles.container}
+      />
+
+      {/* Modal for fullscreen image */}
+      <Modal visible={modalVisible} transparent={true}>
+        <View style={styles.modalContainer}>
+          <TouchableOpacity
+            style={styles.modalBackground}
+            onPress={() => setModalVisible(false)}
+            activeOpacity={1}
+          >
+            <Image source={{ uri: selectedImage }} style={styles.fullImage} />
+          </TouchableOpacity>
+        </View>
+      </Modal>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 10,
+    paddingBottom: 20,
+  },
+  notificationCard: {
+    backgroundColor: '#fff',
+    padding: 15,
+    marginBottom: 15,
+    borderRadius: 15,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  userText: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  statusText: {
+    marginBottom: 10,
+    fontWeight: '600',
+  },
+  accepted: {
+    color: 'green',
+  },
+  pending: {
+    color: 'orange',
+  },
+  notificationImage: {
+    width: 90,
+    height: 90,
+    marginRight: 10,
+    borderRadius: 12,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    marginTop: 12,
+    justifyContent: 'space-between',
+  },
+  button: {
+    flex: 0.48,
+    paddingVertical: 10,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  acceptButton: {
+    backgroundColor: '#4CAF50',
+  },
+  rejectButton: {
+    backgroundColor: '#F44336',
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  loading: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalBackground: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fullImage: {
+    width: '90%',
+    height: '70%',
+    resizeMode: 'contain',
+    borderRadius: 15,
+  },
+});
+
+export default NotificationPage;
