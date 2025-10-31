@@ -33,6 +33,11 @@ type MechanicInfo = {
 };
 
 
+// [
+//   { name: 'Mechanic 1', isVerified: true, location: { latitude: 27.67716, longitude: 85.34933 }, rating: 4.0 },
+//   { name: 'Mechanic 2', isVerified: false, location: { latitude: 27.6916, longitude: 85.33766 }, rating: 4.5 },
+//   { name: 'Mechanic 3', isVerified: true, location: { latitude: 27.66773, longitude: 85.38213 }, rating: 5.0 },
+// ]
 
 export default function RequestService() {
   const [problemStatement, setProblemStatement] = useState('');
@@ -48,10 +53,9 @@ export default function RequestService() {
   const [mechanics, setMechanics] = useState<MechanicInfo[]|null>(null);
 
   const [acceptedRequest, setAcceptedRequest] = useState<{
+    roomName: string;
     mechanicName: string;
   } | null>(null);
-  const [acceptedRequestIds, setAcceptedRequestIds] = useState([]);
-  const [requestAccepted, setRequestAccepted] = useState<boolean>(false);
 
 
 
@@ -71,21 +75,19 @@ export default function RequestService() {
 
   useEffect(() => {
     const interval = setInterval(async () => {
-      try{
-        const access = await SecureStorage.getItemAsync("access_token");
-        const res = await axios.get(`${BASE_API_URL}/api/tracking/notifications/accepted/`, {
-          headers: { Authorization: `Bearer ${access}` }
+      const access = await SecureStorage.getItemAsync("access_token");
+      const res = await axios.get(`${BASE_API_URL}/api/tracking/notifications/list/`, {
+        headers: { Authorization: `Bearer ${access}` }
+      });
+      const currentUser = jwtDecode(access!);
+  
+      const accepted = res.data.find(n => n.from_user.id === currentUser["user_id"] && n.accepted);
+      if (accepted) {
+        setAcceptedRequest({
+          roomName: `tracking_${accepted.id}`,
+          mechanicName: accepted.to_user.full_name
         });
-        const currentUser = jwtDecode(access!);
-        const accepted = res.data["accepted_requests"];
-      
-        if (accepted) {
-          setRequestAccepted(true);
-          setMechanics([{id: accepted["mid"], name: accepted["mechanic_name"], isVerified: accepted["mechanic_is_verified"], location: {latitude: accepted["mechanic_lat"], longitude: accepted["mechanic_lng"]}}]);
-        }
         clearInterval(interval);
-      }catch(e){
-        console.log("Error occured while checking if notifications are accepted. (request.tsx)", e);
       }
     }, 3000);
   
@@ -212,17 +214,11 @@ export default function RequestService() {
   else {
     return (
       <View style={styles.mapContainer}>
-        {requestAccepted ? (
-          <>
-            <LeafletMap 
-            mechanics={mechanics} images={photos} description={problemStatement}
-            />
-            <View style={styles.buttonContainer}>
-                  <TouchableOpacity style={styles.floatingButton}>
-                    <Text style={styles.buttonText}>Request accepted</Text>
-                  </TouchableOpacity>
-            </View>
-          </>
+        {/* If request accepted, show live tracking map */}
+        {acceptedRequest ? (
+          <LeafletMap 
+          mechanics={mechanics} images={photos} description={problemStatement}
+          />
         ) : (
           <>
             {/* Normal map with mechanics */}

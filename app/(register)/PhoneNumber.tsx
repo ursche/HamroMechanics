@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import React, { useContext, useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
+
 const PhoneNumber = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
 
@@ -16,19 +17,20 @@ const PhoneNumber = () => {
   const { user, setUser } = userContext;
 
 
-  const handleNext = () => {
+  const handleNext = async () => {
+
     setUser(prev => ({
       ...prev,
       phone: phoneNumber
       }));
 
-      router.push('/UserTypeSelect');
+      router.push('/Password');
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Join us via phone number</Text>
-      <Text style={styles.subText}>We’ll text a code to verify your phone</Text>
+      <Text style={styles.heading}>Phone number</Text>
+      {/* <Text style={styles.subText}>We’ll text a code to verify your phone</Text> */}
 
       <View style={styles.inputWrapper}>
         <Text style={styles.flag}>🇳🇵</Text>

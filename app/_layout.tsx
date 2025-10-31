@@ -1,9 +1,9 @@
-import { UserProvider } from "@/context/UserContext";
+import { AuthProvider } from "@/context/AuthContext";
 import { Stack } from "expo-router";
 
 export default function RootLayout() {
   return (
-    <UserProvider>
+    <AuthProvider>
       <Stack>
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="Map" options={{ headerShown: false, title: '' }} />
@@ -11,6 +11,6 @@ export default function RootLayout() {
         <Stack.Screen name="(register)" options={{ headerShown: false, }} />
         
       </Stack>
-    </UserProvider>
+    </AuthProvider>
   );
 }

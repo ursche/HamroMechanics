@@ -65,4 +65,4 @@ class NotificationListSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Notification
-        fields = ['id', 'from_user', 'to_user', 'images', 'accepted']
+        fields = ['id', 'from_user', 'to_user', 'images']

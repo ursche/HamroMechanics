@@ -1,24 +1,20 @@
-from enum import unique
-from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager, PermissionsMixin
-
-# Create your models here.
+from django.db import models
 
 class CustomUserManager(BaseUserManager):
-    def create_user(self, email, full_name, password=None, **extra_fields):
-        if not email:
-            raise ValueError('The Email field must be set')
-        email = self.normalize_email(email)
-        user = self.model(email=email, full_name=full_name, **extra_fields)
+    def create_user(self, phone, full_name, password=None, **extra_fields):
+        if not phone:
+            raise ValueError('The Phone field must be set')
+        user = self.model(phone=phone, full_name=full_name, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, full_name, password=None, **extra_fields):
+    def create_superuser(self, phone, full_name, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
 
-        return self.create_user(email, full_name, password, **extra_fields)
+        return self.create_user(phone, full_name, password, **extra_fields)
 
 
 class User(AbstractUser, PermissionsMixin):
@@ -27,20 +23,18 @@ class User(AbstractUser, PermissionsMixin):
         ('mechanic', 'Mechanic')
     )
     
-    email = models.EmailField(unique=True)
+    username = None
+    email = models.EmailField(blank=True, null=True)
     full_name = models.CharField(max_length=255)
+    phone = models.CharField(max_length=15, unique=True)
     role = models.CharField(max_length=10, choices=ROLE_CHOICES)
-    phone = models.CharField(max_length=15, blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
-    USERNAME_FIELD = 'email'
+    USERNAME_FIELD = 'phone'
     REQUIRED_FIELDS = ['full_name', 'role']
 
     objects = CustomUserManager()
 
     def __str__(self):
-        return f"{self.username} ({self.role})"
-
-
-    
+        return f"{self.phone} ({self.role})"

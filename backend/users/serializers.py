@@ -2,6 +2,19 @@ from rest_framework import serializers
 from mechanics.models import MechanicProfile
 from users.models import User
 
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
+
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+
+        token['role'] = user.role
+
+        return token
+
+
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
 
@@ -19,8 +32,18 @@ class UserSerializer(serializers.ModelSerializer):
         user.set_password(password)
         user.save()
 
+
         if user.role == 'mechanic' and not hasattr(user, 'mechanic_profile'):
             MechanicProfile.objects.create(user=user)
 
         return user
 
+
+class UserInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            'id',
+            'full_name',
+            'phone'
+        ]

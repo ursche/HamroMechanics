@@ -1,7 +1,5 @@
 import BASE_API_URL from '@/utils/baseApi';
 import axios from 'axios';
-import * as Location from 'expo-location';
-
 import * as SecureStore from 'expo-secure-store';
 import React, { useEffect, useState } from 'react';
 import {
@@ -45,21 +43,11 @@ const NotificationPage = () => {
 
   const handleAccept = async (notificationId: number) => {
     const access = await SecureStore.getItemAsync("access_token");
-
     try {
-
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        alert('Permission to access location was denied');
-        return;
-      }
-      const loc = await Location.getCurrentPositionAsync({});
-
-       
       const response = await axios.post(
-        `${BASE_API_URL}/api/tracking/notifications/accept/${notificationId}/${loc.coords.latitude}/${loc.coords.longitude}/`,
+        `${BASE_API_URL}/api/tracking/notifications/accept/${notificationId}/`,
         {},
-        { headers: { Authorization: `Bearer ${access}`} }
+        { headers: { Authorization: `Bearer ${access}`, "Content-Type": 'application-json' } }
       );
   
       Alert.alert("Success", "Request accepted!");
@@ -103,12 +91,12 @@ const NotificationPage = () => {
     }
   };
 
-  const openImageModal = (uri: any) => {
+  const openImageModal = (uri) => {
     setSelectedImage(uri);
     setModalVisible(true);
   };
 
-  const renderItem = ({ item }:any) => (
+  const renderItem = ({ item }) => (
     <View style={styles.notificationCard}>
       <Text style={styles.userText}>
         From: {item.from_user.full_name} → To: {item.to_user.full_name}
@@ -116,7 +104,7 @@ const NotificationPage = () => {
       <Text
         style={[styles.statusText, item.accepted ? styles.accepted : styles.pending]}
       >
-        {item.accepted ? 'Accepted' : 'Pending'}
+        {item.accepted ? 'Accepted ✅' : 'Pending ⏳'}
       </Text>
 
       {item.images && item.images.length > 0 && (
