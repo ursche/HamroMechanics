@@ -117,16 +117,32 @@
 import { UserContext } from '@/context/UserContext';
 import BASE_API_URL from '@/utils/baseApi';
 import axios from 'axios';
+import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 // for saving access and refresh token for auth
 import saveTokens from '@/utils/saveTokens';
 
-export default function MechanicForm() {
+export default function UserForm() {
   const [firstname, setFirstname] = useState('');
   const [lastname, setLastname] = useState('');
+    const [lat, setLat] = useState<Number>();
+    const [lng, setLng] = useState<Number>();
+  useEffect(() => {
+        (async () => {
+          const { status } = await Location.requestForegroundPermissionsAsync();
+          if (status !== 'granted') {
+            alert('Permission to access location was denied');
+            return;
+          }
+          const loc = await Location.getCurrentPositionAsync({});
+          setLat(loc.coords.latitude);
+          setLng(loc.coords.longitude);
+        })();
+      }, []);
+      if (!location) return null;
   
   const router = useRouter();
 
@@ -155,13 +171,18 @@ export default function MechanicForm() {
   
     // formData.append('full_name', `${firstname} ${lastname}`);
 
+    console.log(lat);
+    console.log(lng);
     const userData = {
       'phone': user.phone,
       'email': user.email,
       'role': user.role,
       'password': user.password,
-      'full_name': `${firstname} ${lastname}`
+      'full_name': `${firstname} ${lastname}`,
+      'customer_lat': String(lat),
+      'customer_lng': String(lng)
     };
+    console.log(userData);
 
   
     try {

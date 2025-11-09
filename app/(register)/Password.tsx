@@ -4,11 +4,12 @@ import axios from 'axios';
 import { useRouter } from 'expo-router';
 import React, { useContext, useState } from 'react';
 import {
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  Alert,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 
 
@@ -28,6 +29,11 @@ const PasswordScreen = () => {
   const { user, setUser } = userContext;
 
   const handleNext = async () => {
+    if (password.length < 6){
+      Alert.alert("Password must be atleast 6 characters");
+      return;
+    }
+
     setUser(prev => ({
       ...prev,
       password: password,

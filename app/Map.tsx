@@ -1,7 +1,7 @@
 import BASE_API_URL from '@/utils/baseApi';
 import * as Location from 'expo-location';
 import * as SecureStorage from 'expo-secure-store';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { memo, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 
@@ -15,12 +15,19 @@ type MechanicInfo = {
   name: string;
   isVerified: boolean;
   location: LocationCoords | null;
-  rating?: number;
+  // rating?: number;
+};
+
+type UserInfo = {
+  id: number;
+  name: string;
+  location: LocationCoords | null;
+  // rating: number;
 };
 
 type LeafletMapProps = {
   mechanics: MechanicInfo[] | null;
-  // liveRoom?: string;
+  users: UserInfo[] | null;
   images?: any;
   description?: string;
   // userType?: 'user' | 'mechanic'; // optional user type for live tracking
@@ -119,7 +126,7 @@ type LeafletMapProps = {
 //   `;
 // }
 
-function generateHtml(lat: number, lng: number, mechanics: MechanicInfo[], images?: any, description?: string) {
+function generateHtml(lat: number, lng: number, mechanics: MechanicInfo[],users: UserInfo[], images?: any, description?: string) {
   return `
   <!DOCTYPE html>
   <html>
@@ -178,6 +185,17 @@ function generateHtml(lat: number, lng: number, mechanics: MechanicInfo[], image
         }
       });
 
+      const users = ${JSON.stringify(users || [])};
+      users.forEach(m => {
+        if (m.location) {
+          const marker = L.marker([m.location.latitude, m.location.longitude])
+            .addTo(map)
+            .bindPopup(
+              '<b>' + (m.name || 'Unknown') + '</b><br/>'
+            );
+        }
+      });
+
       // optional: receive messages from RN
       document.addEventListener('message', function(event) {
         // handle messages from RN if needed
@@ -188,7 +206,7 @@ function generateHtml(lat: number, lng: number, mechanics: MechanicInfo[], image
   `;
 }
 
-export default function LeafletMap ({ mechanics, images, description }: LeafletMapProps){
+function LeafletMap ({ mechanics, users, images, description }: LeafletMapProps){
   const [location, setLocation] = useState<LocationCoords|null>(null);
   const webviewRef = useRef<WebView | null>(null);
 
@@ -274,7 +292,7 @@ export default function LeafletMap ({ mechanics, images, description }: LeafletM
       <WebView
         ref={webviewRef}
         originWhitelist={['*']}
-        source={{ html: generateHtml(location.latitude, location.longitude, mechanics || [], images, description) }}
+        source={{ html: generateHtml(location.latitude, location.longitude, mechanics || [], users || [], images, description) }}
         javaScriptEnabled
         domStorageEnabled
         style={{ flex: 1 }}
@@ -285,7 +303,7 @@ export default function LeafletMap ({ mechanics, images, description }: LeafletM
 };
 
 
-
+export default memo(LeafletMap);
 
 
 // export default function LeafletMap({ mechanics, images, description }: LeafletMapProps) {

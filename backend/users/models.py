@@ -28,6 +28,8 @@ class User(AbstractUser, PermissionsMixin):
     full_name = models.CharField(max_length=255)
     phone = models.CharField(max_length=15, unique=True)
     role = models.CharField(max_length=10, choices=ROLE_CHOICES)
+    customer_lat = models.FloatField(null=True, blank=True)
+    customer_lng = models.FloatField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
