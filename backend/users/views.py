@@ -16,8 +16,12 @@ class UserCreateAPIView(APIView):
             'full_name': request.data['full_name'],
             'password': request.data['password'], 
             'phone': request.data['phone'],
-            'role': request.data['role']
+            'role': request.data['role'],
         }
+
+        if 'current_lat' in dict(request.data).keys():
+            user_data['current_lat']: request.data['current_lat']
+            user_data['current_lng']: request.data['current_lng']
 
         serializer = UserSerializer(data=user_data)
 

@@ -27,7 +27,14 @@ type LocationCoords = {
 type MechanicInfo = {
   id: number;
   name: string;
-  isVerified: boolean;
+  isVerified?: boolean;
+  location: LocationCoords | null;
+  // rating: number;
+};
+
+type UserInfo = {
+  id: number;
+  name: string;
   location: LocationCoords | null;
   // rating: number;
 };
@@ -48,21 +55,19 @@ export default function RequestService() {
 
 
 
-  const [location, setLocation] = useState<Location.LocationObject|null>(null);
+  const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [errorMsg, setErrorMsg] = useState<String | null>(null);
-  const [mechanics, setMechanics] = useState<MechanicInfo[]|null>(null);
-
-  const [acceptedRequest, setAcceptedRequest] = useState<{
-    roomName: string;
-    mechanicName: string;
-  } | null>(null);
+  const [mechanics, setMechanics] = useState<MechanicInfo[] | null>(null);
+  const [users, setUsers] = useState<UserInfo[]| null>(null);
+  const [acceptedRequest, setAcceptedRequest] = useState<boolean>(false);
+  const [acceptedByMechanic, setAcceptedByMechanic] = useState<boolean>(false);
 
 
 
 
   useEffect(() => {
     (async () => {
-      const _ur:Map<string, any> = jwtDecode((await SecureStorage.getItemAsync("access_token"))!);  
+      const _ur: Map<string, any> = jwtDecode((await SecureStorage.getItemAsync("access_token"))!);
       setUserRole(_ur["role"]);
       // Ask for permission
       let { status } = await Location.requestForegroundPermissionsAsync();
@@ -76,24 +81,65 @@ export default function RequestService() {
   useEffect(() => {
     const interval = setInterval(async () => {
       const access = await SecureStorage.getItemAsync("access_token");
-      const res = await axios.get(`${BASE_API_URL}/api/tracking/notifications/list/`, {
-        headers: { Authorization: `Bearer ${access}` }
-      });
-      const currentUser = jwtDecode(access!);
-  
-      const accepted = res.data.find(n => n.from_user.id === currentUser["user_id"] && n.accepted);
-      if (accepted) {
-        setAcceptedRequest({
-          roomName: `tracking_${accepted.id}`,
-          mechanicName: accepted.to_user.full_name
+      var resMechanic;
+      var res;
+      const currentUser: any = jwtDecode(access!);
+
+      if (currentUser.role === "mechanic") {
+        resMechanic = await axios.get(`${BASE_API_URL}/api/tracking/notifications/list/`, {
+          headers: { Authorization: `Bearer ${access}` }
         });
-        clearInterval(interval);
+        const acceptedMechanic = resMechanic!.data.find((n: any) => n.to_user.id == currentUser.user_id && n.accepted);
+
+        if(acceptedMechanic === undefined){
+          return
+        }
+
+        const tempUsers: UserInfo[] = [{
+          id: acceptedMechanic.from_user.id,
+          name: acceptedMechanic.from_user.full_name,
+          location: { latitude: acceptedMechanic.from_user.customer_lat, longitude: acceptedMechanic.from_user.customer_lng },
+        }];
+        if (users && users[0].id === tempUsers[0].id){
+          return;
+        }
+
+        if (acceptedMechanic) {
+          setAcceptedRequest(true);
+          setUsers(tempUsers);
+
+        }
+      } else {
+        res = await axios.get(`${BASE_API_URL}/api/tracking/notifications/list/customer/`, {
+          headers: { Authorization: `Bearer ${access}` }
+        });
+
+        const accepted = res!.data.find((n: any) => n.from_user.id == currentUser.user_id && n.accepted);
+        if(accepted === undefined){
+          return;
+        }
+
+        const tempMechanics: MechanicInfo[]  = [{
+          id: accepted.to_user.id,
+          name: accepted.to_user.full_name,
+          location: { latitude: accepted.to_user.customer_lat, longitude: accepted.to_user.customer_lng },
+        }];
+        if (mechanics && mechanics[0].id === tempMechanics[0].id){
+          return;
+        }
+
+        if (accepted) {
+          
+          setAcceptedByMechanic(true);
+          setMechanics(tempMechanics);
+        }
       }
+
     }, 3000);
-  
+
     return () => clearInterval(interval);
   }, []);
-  
+
 
 
   // Request permission and pick multiple images from gallery
@@ -146,22 +192,22 @@ export default function RequestService() {
 
     const access = await SecureStorage.getItemAsync("access_token");
 
-    try{
-      
+    try {
+
       const response = await axios.get(`${BASE_API_URL}/api/mechanics/list/?lat=${lat}&lng=${lng}`, {
         headers: {
           Authorization: `Bearer ${access}`,
         }
       });
 
-      const mechanicData:MechanicInfo[] = [];
-      response.data.forEach((element:any) => {
-        mechanicData.push({id:element.user.id, name: element.user.full_name, location: {latitude: element.current_lat, longitude: element.current_lng}, isVerified: element.is_verified});
+      const mechanicData: MechanicInfo[] = [];
+      response.data.forEach((element: any) => {
+        mechanicData.push({ id: element.user.id, name: element.user.full_name, location: { latitude: element.current_lat, longitude: element.current_lng }, isVerified: element.is_verified });
       });
 
       setMechanics(mechanicData)
 
-    }catch(err:any){
+    } catch (err: any) {
       Alert.alert('Search Failed', err.response?.data?.detail || 'Something went wrong.');
     }
     setShowRequestButton(true);
@@ -176,7 +222,7 @@ export default function RequestService() {
   }
 
 
-  if (startRequest){
+  if (startRequest) {
     return (
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.label}>Problem Statement *</Text>
@@ -188,7 +234,7 @@ export default function RequestService() {
           multiline
           textAlignVertical="top"
         />
-  
+
         <Text style={styles.label}>Photos *</Text>
         <View style={styles.photosContainer}>
           {photos.map((uri, idx) => (
@@ -200,11 +246,11 @@ export default function RequestService() {
             </View>
           ))}
         </View>
-  
+
         <TouchableOpacity style={styles.button} onPress={pickImages}>
           <Text style={styles.buttonText}>Attach Photos</Text>
         </TouchableOpacity>
-  
+
         <TouchableOpacity style={[styles.button, { backgroundColor: 'orange' }]} onPress={handleSubmit}>
           <Text style={styles.buttonText}>Search</Text>
         </TouchableOpacity>
@@ -215,16 +261,24 @@ export default function RequestService() {
     return (
       <View style={styles.mapContainer}>
         {/* If request accepted, show live tracking map */}
-        {acceptedRequest ? (
-          <LeafletMap 
-          mechanics={mechanics} images={photos} description={problemStatement}
-          />
+        {acceptedRequest || acceptedByMechanic ? (
+          <>
+            <LeafletMap
+              users={users} mechanics={mechanics} images={photos} description={problemStatement}
+            />
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity style={styles.floatingButton} onPress={() => null}>
+                <Text style={styles.buttonText}>Finish</Text>
+              </TouchableOpacity>
+            </View>
+
+          </>
         ) : (
           <>
             {/* Normal map with mechanics */}
-            <LeafletMap mechanics={mechanics} images={photos} description={problemStatement} />
-  
-            {showRequestButton && !(userRole==="mechanic") && (
+            <LeafletMap users={users} mechanics={mechanics} images={photos} description={problemStatement} />
+
+            {showRequestButton && !(userRole === "mechanic") && (
               <View style={styles.buttonContainer}>
                 <TouchableOpacity style={styles.floatingButton} onPress={handleRequestButton}>
                   <Text style={styles.buttonText}>Search</Text>
@@ -236,7 +290,7 @@ export default function RequestService() {
       </View>
     );
   }
-  
+
 }
 
 const styles = StyleSheet.create({

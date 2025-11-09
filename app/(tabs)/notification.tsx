@@ -14,6 +14,8 @@ import {
   View,
 } from 'react-native';
 
+import * as Location from 'expo-location';
+
 const NotificationPage = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,29 +25,37 @@ const NotificationPage = () => {
   const API_URL = `${BASE_API_URL}/api/tracking/notifications/list/`;
 
   useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        const token = await SecureStore.getItemAsync('access_token');
-        // console.log();
-        const response = await axios.get(API_URL, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setNotifications(response.data);
-      } catch (error) {
-        console.error('Error fetching notifications:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchNotifications();
+    const interval = setInterval(async() => {
+      const fetchNotifications = async () => {
+        try {
+          const token = await SecureStore.getItemAsync('access_token');
+          // console.log();
+          const response = await axios.get(API_URL, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setNotifications(response.data);
+        } catch (error) {
+          console.error('Error fetching notifications:', error);
+        } finally {
+          setLoading(false);
+        }
+      };
+  
+      fetchNotifications();
+      clearInterval(interval);
+    }, 3000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleAccept = async (notificationId: number) => {
     const access = await SecureStore.getItemAsync("access_token");
     try {
+      let currentLocation = await Location.getCurrentPositionAsync({});
+      const lat = currentLocation.coords.latitude;
+      const lng = currentLocation.coords.longitude;
+      
       const response = await axios.post(
-        `${BASE_API_URL}/api/tracking/notifications/accept/${notificationId}/`,
+        `${BASE_API_URL}/api/tracking/notifications/accept/${notificationId}/?lat=${lat}&lng=${lng}`,
         {},
         { headers: { Authorization: `Bearer ${access}`, "Content-Type": 'application-json' } }
       );

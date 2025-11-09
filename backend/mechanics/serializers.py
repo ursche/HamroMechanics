@@ -36,3 +36,12 @@ class MechanicInfoSerializer(serializers.ModelSerializer):
             'is_verified',
             'user'
         ]
+
+# class MechanicLocationSerializer(serializers.ModelSerializer):
+    
+#     class Meta:
+#         model = MechanicProfile
+#         fields = [
+#             'current_lat',
+#             'current_lng',
+#         ]
