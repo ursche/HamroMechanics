@@ -20,10 +20,16 @@ class UserCreateAPIView(APIView):
         }
 
         if 'current_lat' in dict(request.data).keys():
-            user_data['current_lat']: request.data['current_lat']
-            user_data['current_lng']: request.data['current_lng']
+            user_data['current_lat']= request.data['current_lat']
+            user_data['current_lng']= request.data['current_lng']
+            user_data['specialization'] = request.data['specialization']
+            user_data['experience_years'] = request.data['experience_years']
+            user_data['citizenship_doc'] = request.FILES.get('citizenship_doc')
+            user_data['license_doc'] = request.FILES.get('license_doc')
+            user_data['company_affiliation_doc'] = request.FILES.get('company_affiliation_doc')
 
         serializer = UserSerializer(data=user_data)
+        print(serializer)
 
         serializer.is_valid(raise_exception=True)
         
@@ -31,6 +37,8 @@ class UserCreateAPIView(APIView):
 
         # Generate JWT tokens
         refresh = RefreshToken.for_user(user)
+        refresh["role"] = user.role
+
 
         return Response({
             'user': {
