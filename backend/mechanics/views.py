@@ -74,6 +74,7 @@ class NearMechanicsListAPIView(ListAPIView):
             current_lng__gte=min_lng,
             current_lng__lte=max_lng
         )
+        print(MechanicProfile.objects.all())
 
         # Haversine Distance
         filtered_queryset = []
@@ -84,6 +85,8 @@ class NearMechanicsListAPIView(ListAPIView):
             distance = haversine(user_lat, user_lng, mechanic_lat, mechanic_lng)
             if distance <= radius_km:
                 filtered_queryset.append(obj)
+
+        print(filtered_queryset)
 
         return filtered_queryset
 

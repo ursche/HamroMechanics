@@ -51,7 +51,7 @@ export default function RequestService() {
   const [photos, setPhotos] = useState<string[]>([]);
   const [startRequest, setStartRequest] = useState<Boolean>(false);
   const [showRequestButton, setShowRequestButton] = useState<Boolean>(true);
-  const [userRole, setUserRole] = useState<String>("");
+  const [userRole, setUserRole] = useState<String>("customer");
 
 
 
@@ -68,6 +68,7 @@ export default function RequestService() {
   useEffect(() => {
     (async () => {
       const _ur: Map<string, any> = jwtDecode((await SecureStorage.getItemAsync("access_token"))!);
+      console.log(_ur);
       setUserRole(_ur["role"]);
       // Ask for permission
       let { status } = await Location.requestForegroundPermissionsAsync();
