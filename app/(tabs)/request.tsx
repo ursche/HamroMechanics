@@ -1,15 +1,15 @@
 import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useState } from 'react';
 import {
-  Alert,
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    Alert,
+    Image,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
 
 import LeafletMap from '@/app/Map';
@@ -52,6 +52,7 @@ export default function RequestService() {
   const [startRequest, setStartRequest] = useState<Boolean>(false);
   const [showRequestButton, setShowRequestButton] = useState<Boolean>(true);
   const [userRole, setUserRole] = useState<String>("customer");
+  const [notificationId, setNotificationId] = useState(null);
 
 
 
@@ -121,7 +122,8 @@ export default function RequestService() {
         if(accepted === undefined){
           return;
         }
-
+        
+        setNotificationId(accepted.id);
         const tempMechanics: MechanicInfo[]  = [{
           id: accepted.to_user.id,
           name: accepted.to_user.full_name,
@@ -219,12 +221,24 @@ export default function RequestService() {
     }
     setShowRequestButton(true);
 
-
-
   };
 
   const handleFinish = async() => {
-    const response = await axios.post(`${BASE_API_URL}/api/tracking/notifications/finish/`);
+    const access = await SecureStorage.getItemAsync("access_token");
+
+    console.log(access);
+    try {
+        console.log(notificationId);
+        const response = await axios.get(`${BASE_API_URL}/api/tracking/notifications/finish/${notificationId}/`, {
+            headers: {
+                Authorization: `Bearer ${access}`
+            }
+        });
+        console.log(response.data);
+        setAcceptedByMechanic(false);
+    } catch (err: any) {
+      Alert.alert('Could not complete the service.', err.response?.data?.detail || 'Something went wrong.');
+    }
   }
 
   const handleRequestButton = () => {

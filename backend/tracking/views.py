@@ -107,7 +107,7 @@ class AcceptRequestAPIView(APIView):
 class FinishRequestAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def post(self, request, notification_id):
+    def get(self, request, notification_id):
         notification = Notification.objects.get(id=notification_id)
 
         notification.finished = True
