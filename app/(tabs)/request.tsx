@@ -62,6 +62,8 @@ export default function RequestService() {
   const [acceptedRequest, setAcceptedRequest] = useState<boolean>(false);
   const [acceptedByMechanic, setAcceptedByMechanic] = useState<boolean>(false);
 
+  const [showRequestAlert, setShowRequestAlert] = useState<boolean>(true);
+
 
 
 
@@ -133,6 +135,10 @@ export default function RequestService() {
           
           setAcceptedByMechanic(true);
           setMechanics(tempMechanics);
+          
+        }else{
+          setAcceptedByMechanic(false);
+          setMechanics(null);
         }
       }
 
@@ -262,12 +268,14 @@ export default function RequestService() {
     return (
       <View style={styles.mapContainer}>
         {/* If request accepted, show live tracking map */}
-        {acceptedRequest || acceptedByMechanic ? (
+        {acceptedByMechanic ? (
           <>
             <LeafletMap
               users={users} mechanics={mechanics} images={photos} description={problemStatement}
             />
             <View style={styles.buttonContainer}>
+              <Text style={styles.buttonText}>Request has been accepted</Text>
+              
               <TouchableOpacity style={styles.floatingButton} onPress={() => null}>
                 <Text style={styles.buttonText}>Finish</Text>
               </TouchableOpacity>
