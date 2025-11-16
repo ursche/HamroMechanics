@@ -3,6 +3,9 @@ from rest_framework.generics import CreateAPIView, ListAPIView
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from django.utils import timezone
+from datetime import timedelta
+from rest_framework import status
 
 from tracking.models import Notification
 from tracking.serializers import NotificationCreateSerializer, NotificationListSerializer
@@ -21,6 +24,30 @@ class NotificationCreateAPIView(CreateAPIView):
         context = super().get_serializer_context()
         context["request"] = self.request
         return context
+    
+    #don't create duplicate request
+    def create(self, request, *args, **kwargs):
+        from_user = request.user
+        to_user = request.data.get("to_user")
+        description = request.data.get("description")
+
+        # time range = last 2 minutes
+        two_min_ago = timezone.now() - timedelta(minutes=2)
+
+        # check duplicate entry within 2 minutes
+        exists = Notification.objects.filter(
+            from_user=from_user,
+            to_user=to_user,
+            created_at__gte=two_min_ago
+        ).exists()
+
+        if exists:
+            return Response(
+                {"detail": "Duplicate notification blocked (sent within last 2 minutes)."},
+                status=status.HTTP_429_TOO_MANY_REQUESTS
+            )
+
+        return super().create(request, *args, **kwargs)
 
 class NotificationListAPIView(ListAPIView):
     serializer_class = NotificationListSerializer
