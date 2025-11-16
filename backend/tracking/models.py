@@ -18,8 +18,9 @@ class Notification(models.Model):
     from_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="notifications_as_user")
     to_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="notifications_as_mechanic")
     description = models.TextField(null=True)
-    accepted = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    accepted = models.BooleanField(default=False)
+    cancelled = models.BooleanField(default=False)
     finished = models.BooleanField(default=False)
 
     def __str__(self):

@@ -229,7 +229,7 @@ export default function RequestService() {
     console.log(access);
     try {
         console.log(notificationId);
-        const response = await axios.get(`${BASE_API_URL}/api/tracking/notifications/finish/${notificationId}/`, {
+        const response = await axios.post(`${BASE_API_URL}/api/tracking/notifications/finish/${notificationId}/`, {
             headers: {
                 Authorization: `Bearer ${access}`
             }
