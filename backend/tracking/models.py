@@ -2,6 +2,8 @@ from django.db import models
 
 from users.models import User
 from mechanics.models import MechanicProfile
+from history.utils import add_history
+
 
 
 # Create your models here.
@@ -18,6 +20,7 @@ class Notification(models.Model):
     description = models.TextField(null=True)
     accepted = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    finished = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.to_user} by {self.from_user}"
@@ -42,3 +45,18 @@ class LiveTrackingSession(models.Model):
 
     def room_name(self):
         return f"session_{self.id}"
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None  # check if created
+        super().save(*args, **kwargs)
+
+        if is_new:
+            # Create a history record when tracking starts
+            add_history(
+                user=self.user,
+                mechanic=self.mechanic,
+                action="tracking_started",
+                description="Live tracking started."
+            )
+
+    

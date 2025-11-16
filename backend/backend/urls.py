@@ -26,5 +26,7 @@ urlpatterns = [
     # path('api/mechanics/', include('mechanics.urls')),
     # path('api/services/', include('services.urls')),
     path('api/tracking/', include('tracking.urls')),
+    path('api/history/', include("history.urls")),
+
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

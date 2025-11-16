@@ -12,6 +12,9 @@ from tracking.serializers import NotificationCreateSerializer, NotificationListS
 
 
 from mechanics.permissions import IsMechanic
+
+from history.models import ServiceHistory
+
 # Create your views here.
 
 
@@ -76,7 +79,7 @@ class AcceptRequestAPIView(APIView):
         user.customer_lng = mechanic.current_lng
         user.save()
 
-    def post(self, request, notification_id):
+    def get(self, request, notification_id):
         try:
             notification = Notification.objects.get(id=notification_id, to_user=request.user)
             notification.accepted = True
@@ -99,3 +102,20 @@ class AcceptRequestAPIView(APIView):
             })
         except Exception as e:
             return Response({"detail": str(e)}, status=404)
+
+
+class FinishRequestAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, notification_id):
+        notification = Notification.objects.get(id=notification_id)
+
+        notification.finished = True
+        notification.save()
+
+        ServiceHistory.objects.create(user=notification.from_user, mechanic=notification.to_user, description=notification.description, action='completed')
+
+        return Response({'details': 'Request Completed.'}, status=status.HTTP_200_OK)
+
+
+
