@@ -45,6 +45,16 @@ export default function RootLayout(){
             }}
             />
 
+            <Tabs.Screen
+            name="history"
+            options={{
+                title: 'History',
+                tabBarIcon: ({ color, focused }) => (
+                    <Ionicons name={focused? "hourglass-sharp" :"hourglass-outline"} size={24} color={color} />
+                ),
+            }}
+            />
+
 
 
         </Tabs>
