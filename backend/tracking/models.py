@@ -17,6 +17,7 @@ class Notification(models.Model):
     to_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="notifications_as_mechanic")
     description = models.TextField(null=True)
     accepted = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.to_user} by {self.from_user}"
