@@ -1,3 +1,5 @@
+from datetime import datetime
+
 
 from rest_framework.generics import CreateAPIView, ListAPIView
 from rest_framework.views import APIView
@@ -35,21 +37,25 @@ class NotificationCreateAPIView(CreateAPIView):
         description = request.data.get("description")
 
         # time range = last 2 minutes
-        two_min_ago = timezone.now() - timedelta(minutes=2)
+        notification = Notification.objects.filter(from_user=from_user, to_user=to_user)
+        
+        if notification:
+            notification = notification[0]
 
-        # check duplicate entry within 2 minutes
-        exists = Notification.objects.filter(
-            from_user=from_user,
-            to_user=to_user,
-            created_at__gte=two_min_ago
-        ).exists()
+            if (datetime.now() - notification.created_at).min > 2:
+                return Response({'error': 'Service Request creation exceeds 2 mins'})
+            
+            if (notification.accepted and not (notification.cancelled or notification.finished)):
+                return Response({'error': 'Service Request is ongoing'})
+            
+            if ((notification.description == description) and not (notification.cancelled or notification.finished)):
+                return Response({'error': 'Duplicate service request'})
 
-        if exists:
-            return Response(
-                {"detail": "Duplicate notification blocked (sent within last 2 minutes)."},
-                status=status.HTTP_429_TOO_MANY_REQUESTS
-            )
 
+            if notification.finished or notification.cancelled:
+                return super().create(request, *args, **kwargs)
+
+    
         return super().create(request, *args, **kwargs)
 
 class NotificationListAPIView(ListAPIView):
@@ -104,6 +110,24 @@ class AcceptRequestAPIView(APIView):
             return Response({"detail": str(e)}, status=404)
 
 
+class CancelRequestAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, notification_id):
+        notification = Notification.objects.get(id=notification_id)
+
+        time_diff = notification.created_at - datetime.now()
+        print(time_diff)
+
+        if (time_diff.min < 2 and not notification.accepted):
+            notification.cancelled = True
+
+            return Response({'details': 'Request has been cancelled'}, status=status.HTTP_200_OK)
+        
+        return Response({'error': 'Cannot cancel request.'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
 class FinishRequestAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -113,9 +137,13 @@ class FinishRequestAPIView(APIView):
         notification.finished = True
         notification.save()
 
-        ServiceHistory.objects.create(user=notification.from_user, mechanic=notification.to_user, description=notification.description, action='completed')
+        exists = ServiceHistory.objects.filter(user=notification.from_user, mechanic=notification.to_user, description=notification.description).exists()
 
-        return Response({'details': 'Request Completed.'}, status=status.HTTP_200_OK)
+        if not exists:
+            ServiceHistory.objects.create(user=notification.from_user, mechanic=notification.to_user, description=notification.description, action='completed')
 
+            return Response({'details': 'Request Completed.'}, status=status.HTTP_200_OK)
+
+        return Response({'error': 'Duplicate History.'}, status=status.HTTP_409_CONFLICT)
 
 
