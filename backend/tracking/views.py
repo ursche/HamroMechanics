@@ -113,9 +113,13 @@ class FinishRequestAPIView(APIView):
         notification.finished = True
         notification.save()
 
-        ServiceHistory.objects.create(user=notification.from_user, mechanic=notification.to_user, description=notification.description, action='completed')
+        exists = ServiceHistory.objects.filter(user=notification.from_user, mechanic=notification.to_user, description=notification.description).exists()
 
-        return Response({'details': 'Request Completed.'}, status=status.HTTP_200_OK)
+        if not exists:
+            ServiceHistory.objects.create(user=notification.from_user, mechanic=notification.to_user, description=notification.description, action='completed')
 
+            return Response({'details': 'Request Completed.'}, status=status.HTTP_200_OK)
+
+        return Response({'error': 'Duplicate History.'}, status=status.HTTP_409_CONFLICT)
 
 
