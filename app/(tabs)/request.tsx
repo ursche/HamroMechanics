@@ -223,6 +223,10 @@ export default function RequestService() {
 
   };
 
+  const handleFinish = async() => {
+    const response = await axios.post(`${BASE_API_URL}/api/tracking/notifications/finish/`);
+  }
+
   const handleRequestButton = () => {
     setShowRequestButton(false);
     setStartRequest(true);
@@ -276,7 +280,7 @@ export default function RequestService() {
             <View style={styles.buttonContainer}>
               <Text style={styles.buttonText}>Request has been accepted</Text>
               
-              <TouchableOpacity style={styles.floatingButton} onPress={() => null}>
+              <TouchableOpacity style={styles.floatingButton} onPress={handleFinish}>
                 <Text style={styles.buttonText}>Finish</Text>
               </TouchableOpacity>
             </View>

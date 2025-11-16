@@ -1,65 +1,54 @@
-// History.tsx
-
-import React from "react";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import React, { useEffect, useState } from "react";
+import { View, Text, FlatList, StyleSheet } from "react-native";
+import * as SecureStore from "expo-secure-store";
+import axios from "axios";
+import BASE_API_URL from "@/utils/baseApi";
 
 export default function History() {
+  const [history, setHistory] = useState([]);
+
+  useEffect(() => {
+    loadHistory();
+  }, []);
+
+  const loadHistory = async () => {
+    const token = await SecureStore.getItemAsync("access_token");
+    const res = await axios.get(`${BASE_API_URL}/history/`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    setHistory(res.data);
+  };
+
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.header}>History</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>Service History</Text>
 
-      {/* Notification History */}
-      <HistoryItem label="Service History" />
-    </ScrollView>
+      <FlatList
+        data={history}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <View style={styles.card}>
+            <Text style={styles.action}>{item.action}</Text>
+            <Text style={styles.desc}>{item.description}</Text>
+            <Text style={styles.time}>{item.timestamp}</Text>
+          </View>
+        )}
+      />
+    </View>
   );
-}
-
-function HistoryItem({
-  label,
-  onPress,
-}: {
-  label: string;
-  onPress?: VoidFunction;
-}) {
-  return (
-    <TouchableOpacity style={styles.item} onPress={onPress}>
-      <Text style={styles.label}>{label}</Text>
-      <Ionicons name="chevron-forward" size={20} color="#999" />
-    </TouchableOpacity>
-  );
-}
-
-function SectionTitle({ title }: { title: string }) {
-  return <Text style={styles.sectionTitle}>{title}</Text>;
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-    backgroundColor: "#fff",
+  container: { padding: 20, backgroundColor: "#fff", flex: 1 },
+  title: { fontSize: 20, fontWeight: "bold", marginBottom: 20 },
+  card: {
+    padding: 15,
+    backgroundColor: "#f7f7f7",
+    borderRadius: 10,
+    marginBottom: 12,
   },
-  header: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginBottom: 25,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#666",
-    marginTop: 20,
-    marginBottom: 10,
-  },
-  item: {
-    paddingVertical: 15,
-    borderBottomWidth: 0.5,
-    borderColor: "#ccc",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  label: {
-    fontSize: 16,
-  },
+  action: { fontWeight: "bold", marginBottom: 5 },
+  desc: { color: "#555" },
+  time: { marginTop: 6, fontSize: 12, color: "#888" },
 });
