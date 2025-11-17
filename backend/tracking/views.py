@@ -1,4 +1,4 @@
-from datetime import datetime
+from django.utils import timezone
 
 
 from rest_framework.generics import CreateAPIView, ListAPIView
@@ -32,31 +32,37 @@ class NotificationCreateAPIView(CreateAPIView):
     
     #don't create duplicate request
     def create(self, request, *args, **kwargs):
-        from_user = request.user
-        to_user = request.data.get("to_user")
+        from_user = request.user.id
+        to_user = request.data.get("to_user_id")
+        print(from_user)
+        print(to_user)
         description = request.data.get("description")
 
         # time range = last 2 minutes
-        notification = Notification.objects.filter(from_user=from_user, to_user=to_user)
+        notification = Notification.objects.filter(from_user=from_user, accepted=False)
+        print(notification)
         
-        if notification:
+        if notification.exists():
             notification = notification[0]
 
-            if (datetime.now() - notification.created_at).min > 2:
-                return Response({'error': 'Service Request creation exceeds 2 mins'})
+            print((timezone.now() - notification.created_at).total_seconds())
+            if (timezone.now() - notification.created_at).total_seconds() > 2*60:
+                notification.delete()
+                return super().create(request, *args, **kwargs)
+            
             
             if (notification.accepted and not (notification.cancelled or notification.finished)):
-                return Response({'error': 'Service Request is ongoing'})
+                return Response({'error': 'Service Request is ongoing'}, status=status.HTTP_400_BAD_REQUEST)
             
             if ((notification.description == description) and not (notification.cancelled or notification.finished)):
-                return Response({'error': 'Duplicate service request'})
+                return Response({'error': 'Mutiple service request'}, status=status.HTTP_400_BAD_REQUEST)
 
 
             if notification.finished or notification.cancelled:
                 return super().create(request, *args, **kwargs)
 
-    
-        return super().create(request, *args, **kwargs)
+        else:
+            return super().create(request, *args, **kwargs)
 
 class NotificationListAPIView(ListAPIView):
     serializer_class = NotificationListSerializer
@@ -131,7 +137,7 @@ class CancelRequestAPIView(APIView):
 class FinishRequestAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, notification_id):
+    def post(self, request, notification_id):
         notification = Notification.objects.get(id=notification_id)
 
         notification.finished = True

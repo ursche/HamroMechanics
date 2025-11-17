@@ -3,25 +3,29 @@ import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import React, { useCallback, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  Image,
-  Modal,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    FlatList,
+    Image,
+    Modal,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 
-  import { useFocusEffect } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
+
+import { useFocusEffect } from '@react-navigation/native';
 import * as Location from 'expo-location';
 
-  const NotificationPage = () => {
+const NotificationPage = () => {
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedImage, setSelectedImage] = useState(null);
+
+    const router = useRouter();
 
     const API_URL = `${BASE_API_URL}/api/tracking/notifications/list/`;
 
@@ -75,6 +79,8 @@ import * as Location from 'expo-location';
             n.id === notificationId ? { ...n, accepted: true } : n
           )
         );
+
+        router.push("/request");
 
       } catch (err: any) {
         Alert.alert("Error", err.response?.data?.detail || "Something went wrong");

@@ -37,7 +37,6 @@ class NotificationCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         request = self.context.get('request')
-        print(validated_data)
         from_user = request.user
 
         to_user_id = validated_data.pop('to_user_id')
