@@ -1,7 +1,7 @@
-import BASE_API_URL from '@/utils/baseApi';
+  import BASE_API_URL from '@/utils/baseApi';
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -14,255 +14,264 @@ import {
   View,
 } from 'react-native';
 
+  import { useFocusEffect } from '@react-navigation/native';
 import * as Location from 'expo-location';
 
-const NotificationPage = () => {
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
+  const NotificationPage = () => {
+    const [notifications, setNotifications] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [selectedImage, setSelectedImage] = useState(null);
 
-  const API_URL = `${BASE_API_URL}/api/tracking/notifications/list/`;
+    const API_URL = `${BASE_API_URL}/api/tracking/notifications/list/`;
 
-  useEffect(() => {
-    const interval = setInterval(async() => {
-      const fetchNotifications = async () => {
-        try {
-          const token = await SecureStore.getItemAsync('access_token');
-          // console.log();
-          const response = await axios.get(API_URL, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          setNotifications(response.data);
-        } catch (error) {
-          console.error('Error fetching notifications:', error);
-        } finally {
-          setLoading(false);
+    useFocusEffect(
+      useCallback(() => {
+        const fetchData = async () => {
+          try {
+            const token = await SecureStore.getItemAsync('access_token');
+            if (token) {
+              const response = await axios.get(API_URL, {
+                headers: { Authorization: `Bearer ${token}` },
+              });
+              const notif = response!.data.filter((n: any) => n.accepted === false);
+              console.log('----------------------');
+              console.log(notif);
+              
+              setNotifications(notif);
+            }
+          } catch (error) {
+            console.error('Error fetching notifications:', error);
+
+          } finally {
+            setLoading(false);
+
+          }
+
         }
-      };
-  
-      fetchNotifications();
-      clearInterval(interval);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
+          fetchData();
 
-  const handleAccept = async (notificationId: number) => {
-    const access = await SecureStore.getItemAsync("access_token");
-    try {
-      let currentLocation = await Location.getCurrentPositionAsync({});
-      const lat = currentLocation.coords.latitude;
-      const lng = currentLocation.coords.longitude;
-      
-      const response = await axios.post(
-        `${BASE_API_URL}/api/tracking/notifications/accept/${notificationId}/?lat=${lat}&lng=${lng}`,
-        {},
-        { headers: { Authorization: `Bearer ${access}`, "Content-Type": 'application-json' } }
-      );
-  
-      Alert.alert("Success", "Request accepted!");
-  
-      // Optionally update the local notification list
-      setNotifications(prev =>
-        prev.map(n =>
-          n.id === notificationId ? { ...n, accepted: true } : n
-        )
-      );
-  
-    } catch (err: any) {
-      Alert.alert("Error", err.response?.data?.detail || "Something went wrong");
-    }
-  };
-  
+      }, [])
+    );
 
-//   Change this to handle reject
-  const handleUpdate = async (id, action) => {
-    try {
-      const token = await SecureStore.getItemAsync('access_token');
-      await axios.patch(
-        `${BASE_API_URL}/api/tracking/notifications/${id}/`,
-        { accepted: action === 'accept' },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+    const handleAccept = async (notificationId: number) => {
+      const access = await SecureStore.getItemAsync("access_token");
+      try {
+        let currentLocation = await Location.getCurrentPositionAsync({});
+        const lat = currentLocation.coords.latitude;
+        const lng = currentLocation.coords.longitude;
 
-      setNotifications((prev) =>
-        prev.map((notif) =>
-          notif.id === id ? { ...notif, accepted: action === 'accept' } : notif
-        )
-      );
+        const response = await axios.post(
+          `${BASE_API_URL}/api/tracking/notifications/accept/${notificationId}/?lat=${lat}&lng=${lng}`,
+          {},
+          { headers: { Authorization: `Bearer ${access}`, "Content-Type": 'application-json' } }
+        );
 
-      Alert.alert(
-        action === 'accept' ? 'Accepted' : 'Rejected',
-        `Notification has been ${action}ed.`
-      );
-    } catch (error) {
-      console.error('Error updating notification:', error);
-      Alert.alert('Error', 'Failed to update notification.');
-    }
-  };
+        Alert.alert("Success", "Request accepted!");
 
-  const openImageModal = (uri) => {
-    setSelectedImage(uri);
-    setModalVisible(true);
-  };
+        // Optionally update the local notification list
+        setNotifications(prev =>
+          prev.map(n =>
+            n.id === notificationId ? { ...n, accepted: true } : n
+          )
+        );
 
-  const renderItem = ({ item }) => (
-    <View style={styles.notificationCard}>
-      <Text style={styles.userText}>
-        From: {item.from_user.full_name} → To: {item.to_user.full_name}
-      </Text>
-      <Text
-        style={[styles.statusText, item.accepted ? styles.accepted : styles.pending]}
-      >
-        {item.accepted ? 'Accepted ✅' : 'Pending ⏳'}
-      </Text>
+      } catch (err: any) {
+        Alert.alert("Error", err.response?.data?.detail || "Something went wrong");
+      }
+    };
 
-      {item.images && item.images.length > 0 && (
-        <FlatList
-          horizontal
-          data={item.images}
-          keyExtractor={(img) => img.id.toString()}
-          renderItem={({ item: img }) => (
-            <TouchableOpacity onPress={() => openImageModal(img.image)}>
-              <Image source={{ uri: img.image }} style={styles.notificationImage} />
+
+    //   Change this to handle reject
+    const handleUpdate = async (id, action) => {
+      try {
+        const token = await SecureStore.getItemAsync('access_token');
+        await axios.patch(
+          `${BASE_API_URL}/api/tracking/notifications/${id}/`,
+          { accepted: action === 'accept' },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        setNotifications((prev) =>
+          prev.map((notif) =>
+            notif.id === id ? { ...notif, accepted: action === 'accept' } : notif
+          )
+        );
+
+        Alert.alert(
+          action === 'accept' ? 'Accepted' : 'Rejected',
+          `Notification has been ${action}ed.`
+        );
+      } catch (error) {
+        console.error('Error updating notification:', error);
+        Alert.alert('Error', 'Failed to update notification.');
+      }
+    };
+
+    const openImageModal = (uri) => {
+      setSelectedImage(uri);
+      setModalVisible(true);
+    };
+
+    const renderItem = ({ item }) => (
+      <View style={styles.notificationCard}>
+        <Text style={styles.userText}>
+          From: {item.from_user.full_name} → To: {item.to_user.full_name}
+        </Text>
+        <Text
+          style={[styles.statusText, item.accepted ? styles.accepted : styles.pending]}
+        >
+          {item.accepted ? 'Accepted' : 'Pending'}
+        </Text>
+
+        {item.images && item.images.length > 0 && (
+          <FlatList
+            horizontal
+            data={item.images}
+            keyExtractor={(img) => img.id.toString()}
+            renderItem={({ item: img }) => (
+              <TouchableOpacity onPress={() => openImageModal(img.image)}>
+                <Image source={{ uri: img.image }} style={styles.notificationImage} />
+              </TouchableOpacity>
+            )}
+            style={{ marginTop: 10 }}
+          />
+        )}
+
+        {!item.accepted && (
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={[styles.button, styles.acceptButton]}
+              onPress={() => handleAccept(item.id)}
+            >
+              <Text style={styles.buttonText}>Accept</Text>
             </TouchableOpacity>
-          )}
-          style={{ marginTop: 10 }}
-        />
-      )}
-
-      {!item.accepted && (
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={[styles.button, styles.acceptButton]}
-            onPress={() => handleAccept(item.id)}
-          >
-            <Text style={styles.buttonText}>Accept</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.button, styles.rejectButton]}
-            onPress={() => handleUpdate(item.id, 'reject')}
-          >
-            <Text style={styles.buttonText}>Reject</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-    </View>
-  );
-
-  if (loading) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator size="large" color="#007AFF" />
+            <TouchableOpacity
+              style={[styles.button, styles.rejectButton]}
+              onPress={() => handleUpdate(item.id, 'reject')}
+            >
+              <Text style={styles.buttonText}>Reject</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
     );
-  }
 
-  return (
-    <View style={{ flex: 1 }}>
-      <FlatList
-        data={notifications}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={renderItem}
-        contentContainerStyle={styles.container}
-      />
-
-      {/* Modal for fullscreen image */}
-      <Modal visible={modalVisible} transparent={true}>
-        <View style={styles.modalContainer}>
-          <TouchableOpacity
-            style={styles.modalBackground}
-            onPress={() => setModalVisible(false)}
-            activeOpacity={1}
-          >
-            <Image source={{ uri: selectedImage }} style={styles.fullImage} />
-          </TouchableOpacity>
+    if (loading) {
+      return (
+        <View style={styles.loading}>
+          <ActivityIndicator size="large" color="#007AFF" />
         </View>
-      </Modal>
-    </View>
-  );
-};
+      );
+    }
 
-const styles = StyleSheet.create({
-  container: {
-    padding: 10,
-    paddingBottom: 20,
-  },
-  notificationCard: {
-    backgroundColor: '#fff',
-    padding: 15,
-    marginBottom: 15,
-    borderRadius: 15,
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  userText: {
-    fontWeight: 'bold',
-    fontSize: 16,
-    marginBottom: 5,
-  },
-  statusText: {
-    marginBottom: 10,
-    fontWeight: '600',
-  },
-  accepted: {
-    color: 'green',
-  },
-  pending: {
-    color: 'orange',
-  },
-  notificationImage: {
-    width: 90,
-    height: 90,
-    marginRight: 10,
-    borderRadius: 12,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    marginTop: 12,
-    justifyContent: 'space-between',
-  },
-  button: {
-    flex: 0.48,
-    paddingVertical: 10,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  acceptButton: {
-    backgroundColor: '#4CAF50',
-  },
-  rejectButton: {
-    backgroundColor: '#F44336',
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  loading: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.9)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalBackground: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  fullImage: {
-    width: '90%',
-    height: '70%',
-    resizeMode: 'contain',
-    borderRadius: 15,
-  },
-});
+    return (
+      notifications && (
+        <View style={{ flex: 1 }}>
+        <FlatList
+          data={notifications}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={renderItem}
+          contentContainerStyle={styles.container}
+        />
 
-export default NotificationPage;
+        {/* Modal for fullscreen image */}
+        <Modal visible={modalVisible} transparent={true}>
+          <View style={styles.modalContainer}>
+            <TouchableOpacity
+              style={styles.modalBackground}
+              onPress={() => setModalVisible(false)}
+              activeOpacity={1}
+            >
+              <Image source={{ uri: selectedImage }} style={styles.fullImage} />
+            </TouchableOpacity>
+          </View>
+        </Modal>
+      </View>
+      )
+    );
+  };
+
+  const styles = StyleSheet.create({
+    container: {
+      padding: 10,
+      paddingBottom: 20,
+    },
+    notificationCard: {
+      backgroundColor: '#fff',
+      padding: 15,
+      marginBottom: 15,
+      borderRadius: 15,
+      shadowColor: '#000',
+      shadowOpacity: 0.08,
+      shadowRadius: 8,
+      elevation: 4,
+    },
+    userText: {
+      fontWeight: 'bold',
+      fontSize: 16,
+      marginBottom: 5,
+    },
+    statusText: {
+      marginBottom: 10,
+      fontWeight: '600',
+    },
+    accepted: {
+      color: 'green',
+    },
+    pending: {
+      color: 'orange',
+    },
+    notificationImage: {
+      width: 90,
+      height: 90,
+      marginRight: 10,
+      borderRadius: 12,
+    },
+    buttonContainer: {
+      flexDirection: 'row',
+      marginTop: 12,
+      justifyContent: 'space-between',
+    },
+    button: {
+      flex: 0.48,
+      paddingVertical: 10,
+      borderRadius: 10,
+      alignItems: 'center',
+    },
+    acceptButton: {
+      backgroundColor: '#4CAF50',
+    },
+    rejectButton: {
+      backgroundColor: '#F44336',
+    },
+    buttonText: {
+      color: '#fff',
+      fontWeight: 'bold',
+    },
+    loading: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    modalContainer: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.9)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    modalBackground: {
+      width: '100%',
+      height: '100%',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    fullImage: {
+      width: '90%',
+      height: '70%',
+      resizeMode: 'contain',
+      borderRadius: 15,
+    },
+  });
+
+  export default NotificationPage;
