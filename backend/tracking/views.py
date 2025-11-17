@@ -85,7 +85,7 @@ class AcceptRequestAPIView(APIView):
         user.customer_lng = mechanic.current_lng
         user.save()
 
-    def get(self, request, notification_id):
+    def post(self, request, notification_id):
         try:
             notification = Notification.objects.get(id=notification_id, to_user=request.user)
             notification.accepted = True
@@ -131,7 +131,7 @@ class CancelRequestAPIView(APIView):
 class FinishRequestAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def post(self, request, notification_id):
+    def get(self, request, notification_id):
         notification = Notification.objects.get(id=notification_id)
 
         notification.finished = True
