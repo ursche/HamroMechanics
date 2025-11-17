@@ -1,15 +1,15 @@
 import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useState } from 'react';
 import {
-  Alert,
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    Alert,
+    Image,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
 
 import LeafletMap from '@/app/Map';
@@ -93,7 +93,7 @@ export default function RequestService() {
         resMechanic = await axios.get(`${BASE_API_URL}/api/tracking/notifications/list/`, {
           headers: { Authorization: `Bearer ${access}` }
         });
-        const acceptedMechanic = resMechanic!.data.find((n: any) => n.to_user.id == currentUser.user_id && n.accepted);
+        const acceptedMechanic = resMechanic!.data.find((n: any) => n.to_user.id == currentUser.user_id && n.accepted && !n.finished && !n.cancelled);
 
         if(acceptedMechanic === undefined){
           return

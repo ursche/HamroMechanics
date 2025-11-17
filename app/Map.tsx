@@ -377,7 +377,7 @@ function LeafletMap ({ mechanics, users, images, description }: LeafletMapProps)
 
       const mechanicId = data.mechanicId;
       const desc = data.description || '';
-      const pageImages = data.images || []; // whatever you passed in the HTML
+      const pageImages = data.images || [];
 
       const token = await SecureStorage.getItemAsync('access_token');
 
