@@ -122,7 +122,7 @@ class CancelRequestAPIView(APIView):
     def post(self, request, notification_id):
         notification = Notification.objects.get(id=notification_id)
 
-        time_diff = notification.created_at - datetime.now()
+        time_diff = notification.created_at - timezone.now()
         print(time_diff)
 
         if (time_diff.min < 2 and not notification.accepted):
@@ -137,7 +137,7 @@ class CancelRequestAPIView(APIView):
 class FinishRequestAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def post(self, request, notification_id):
+    def get(self, request, notification_id):
         notification = Notification.objects.get(id=notification_id)
 
         notification.finished = True
