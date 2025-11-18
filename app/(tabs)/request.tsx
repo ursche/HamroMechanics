@@ -53,6 +53,7 @@ export default function RequestService() {
   const [showRequestButton, setShowRequestButton] = useState<Boolean>(true);
   const [userRole, setUserRole] = useState<String>("customer");
   const [notificationId, setNotificationId] = useState(null);
+  const [userName, setUserName] = useState();
 
 
 
@@ -73,6 +74,7 @@ export default function RequestService() {
       const _ur: Map<string, any> = jwtDecode((await SecureStorage.getItemAsync("access_token"))!);
       console.log(_ur);
       setUserRole(_ur["role"]);
+      setUserName(_ur["full_name"]);
       // Ask for permission
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
@@ -291,6 +293,9 @@ export default function RequestService() {
         {/* If request accepted, show live tracking map */}
         {acceptedByMechanic ? (
           <>
+            <View style={styles.userName}>
+                <Text style={styles.userNameText}>{userName} - {userRole}</Text>
+            </View>
             <LeafletMap
               users={users} mechanics={mechanics} images={photos} description={problemStatement}
             />
@@ -305,6 +310,9 @@ export default function RequestService() {
           </>
         ) : (
           <>
+            <View style={styles.userName}>
+                <Text style={styles.userNameText}>{userName} - {userRole}</Text>
+            </View>
             {/* Normal map with mechanics */}
             <LeafletMap users={users} mechanics={mechanics} images={photos} description={problemStatement} />
 
@@ -324,6 +332,18 @@ export default function RequestService() {
 }
 
 const styles = StyleSheet.create({
+  userName: {
+    // position: 'absolute',
+    // zIndex: 10000,
+    // top: 0,
+    width: '100%',
+    padding: 5,
+    backgroundColor: '#000000',
+  },
+  userNameText: {
+    textAlign: 'center',
+    color: '#ffffff',
+  },
   container: {
     padding: 20,
   },
