@@ -34,13 +34,10 @@ class NotificationCreateAPIView(CreateAPIView):
     def create(self, request, *args, **kwargs):
         from_user = request.user.id
         to_user = request.data.get("to_user_id")
-        print(from_user)
-        print(to_user)
         description = request.data.get("description")
 
         # time range = last 2 minutes
         notification = Notification.objects.filter(from_user=from_user, accepted=False)
-        print(notification)
         
         if notification.exists():
             notification = notification[0]
@@ -94,6 +91,7 @@ class AcceptRequestAPIView(APIView):
     def post(self, request, notification_id):
         try:
             notification = Notification.objects.get(id=notification_id, to_user=request.user)
+
             notification.accepted = True
             notification.save()
 
@@ -113,7 +111,23 @@ class AcceptRequestAPIView(APIView):
                 "mechanic_name": request.user.full_name
             })
         except Exception as e:
-            return Response({"detail": str(e)}, status=404)
+            return Response({"detail": str(e)}, status=status.HTTP_404_NOT_FOUND)
+
+class RejectRequestAPIView(APIView):
+    permission_classes = [IsAuthenticated, IsMechanic]
+
+    def post(self, request, notification_id):
+        try:
+            notification = Notification.objects.get(id=notification_id, to_user=request.user)
+
+            notification.rejected = True
+            notification.save()
+
+            return Response({
+                "detail": "Request Rejected"
+            })
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_404_NOT_FOUND)
 
 
 class CancelRequestAPIView(APIView):
