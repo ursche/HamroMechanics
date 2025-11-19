@@ -3,15 +3,15 @@ import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import React, { useCallback, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    FlatList,
-    Image,
-    Modal,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Image,
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 import { useRouter } from 'expo-router';
@@ -87,30 +87,27 @@ const NotificationPage = () => {
       }
     };
 
-
-    //   Change this to handle reject
-    const handleUpdate = async (id, action) => {
+    const handleReject = async (notificationId: number) => {
+      const access = await SecureStore.getItemAsync("access_token");
       try {
-        const token = await SecureStore.getItemAsync('access_token');
-        await axios.patch(
-          `${BASE_API_URL}/api/tracking/notifications/${id}/`,
-          { accepted: action === 'accept' },
-          { headers: { Authorization: `Bearer ${token}` } }
+        const response = await axios.post(
+          `${BASE_API_URL}/api/tracking/notifications/reject/${notificationId}/`,
+          {},
+          { headers: { Authorization: `Bearer ${access}`, "Content-Type": 'application-json' } }
         );
 
-        setNotifications((prev) =>
-          prev.map((notif) =>
-            notif.id === id ? { ...notif, accepted: action === 'accept' } : notif
+        Alert.alert("Success", "Request Rejected!");
+
+        // Optionally update the local notification list
+        setNotifications(prev =>
+          prev.map(n =>
+            n.id === notificationId ? { ...n, rejected: true } : n
           )
         );
 
-        Alert.alert(
-          action === 'accept' ? 'Accepted' : 'Rejected',
-          `Notification has been ${action}ed.`
-        );
-      } catch (error) {
-        console.error('Error updating notification:', error);
-        Alert.alert('Error', 'Failed to update notification.');
+
+      } catch (err: any) {
+        Alert.alert("Error", err.response?.data?.detail || "Something went wrong");
       }
     };
 
@@ -127,7 +124,7 @@ const NotificationPage = () => {
         <Text
           style={[styles.statusText, item.accepted ? styles.accepted : styles.pending]}
         >
-          {item.accepted ? 'Accepted' : 'Pending'}
+          {item.accepted ? 'Accepted' : item.rejected? 'Rejected':  'Pending'}
         </Text>
 
         {item.images && item.images.length > 0 && (
@@ -144,7 +141,7 @@ const NotificationPage = () => {
           />
         )}
 
-        {!item.accepted && (
+        {(!item.accepted || item.rejected) && (
           <View style={styles.buttonContainer}>
             <TouchableOpacity
               style={[styles.button, styles.acceptButton]}
@@ -154,7 +151,7 @@ const NotificationPage = () => {
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.button, styles.rejectButton]}
-              onPress={() => handleUpdate(item.id, 'reject')}
+              onPress={() => handleReject(item.id)}
             >
               <Text style={styles.buttonText}>Reject</Text>
             </TouchableOpacity>

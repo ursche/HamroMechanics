@@ -38,6 +38,7 @@ class UserCreateAPIView(APIView):
         # Generate JWT tokens
         refresh = RefreshToken.for_user(user)
         refresh["role"] = user.role
+        refresh['full_name'] = user.full_name
 
 
         return Response({
